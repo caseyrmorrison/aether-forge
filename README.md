@@ -35,3 +35,13 @@ Public game URL: https://caseyrmorrison.github.io/aether-forge/
 GitHub Actions runs the tests, builds the game, and deploys `dist/` to GitHub Pages on every push to `main`. In the repository's Pages settings, the source must be **GitHub Actions**. Relative asset paths support the repository subdirectory.
 
 Each friend has an independent single-player save stored in their own browser. To move an existing localhost save to the live site, export it in the local game's Settings, then import it in Settings on the live site. Saves do not sync between browsers or devices automatically.
+
+## Expansion: Chart Your Own Path (v3)
+
+The game now has 16 structures, 26 research upgrades, 12 worlds, and 14 permanent relics. Structure bulk purchases support ×1, ×10, and ×100. Research purchases update their existing rows so the list retains its scroll position.
+
+The Expedition tab includes three once-per-run specializations, a three-slot artifact loadout, and three challenge expeditions. Trials unlock after the first ascension. Starting one explicitly resets the current run without ascension rewards. They disable stardust power, relic effects, artifact bonuses and starter gifts; completing or abandoning starts a new normal run. Trial completions award Echoes once and unlock artifacts and powerful relics.
+
+After the first ascension, enable auto-buyers and select cheapest-first or base-output-per-cost priority, with a 10%, 25%, or 50% per-tick budget. Automation buys at most ten structures per second while the browser tab is visible, respects trial restrictions, and does not simulate purchases offline.
+
+Four world abilities rotate through the twelve worlds with a shared 90-second cooldown. Orbital modules appear as your structure count grows, comets cross the scene during capture windows, Overdrive accelerates drones and brightens the core, and discoveries emit expanding rings. Reduced-motion preferences suppress the moving effects. Original and v2 saves migrate to the expanded structure and relic arrays.

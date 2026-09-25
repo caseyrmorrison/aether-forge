@@ -99,7 +99,7 @@ test("original saves migrate without losing structures or currency", () => {
   assert.ok(s);
   assert.equal(s.energy, 1234);
   assert.deepEqual(s.counts.slice(0, 6), old.counts);
-  assert.equal(s.counts.length, 12);
+  assert.equal(s.counts.length, 16);
   assert.equal(s.bestWorld, 2);
   assert.equal(s.relics.length, relics.length);
 });
@@ -204,7 +204,169 @@ test("all expansion content contributes finite meaningful progression", () => {
   s.world = worlds.length - 1;
   assert.ok(Number.isFinite(production(s)));
   assert.ok(production(s) > 1e12);
-  assert.equal(units.length, 12);
-  assert.equal(research.length, 18);
-  assert.equal(worlds.length, 8);
+  assert.equal(units.length, 16);
+  assert.equal(research.length, 26);
+  assert.equal(worlds.length, 12);
+});
+
+import {
+  chooseRole,
+  startTrial,
+  finishTrial,
+  learn,
+  explore,
+  automate,
+  toggleArtifact,
+  worldAbility,
+  worldPrice,
+  passiveActions,
+} from "./game.ts";
+test("x100 uses the geometric price and purchases exactly 100", () => {
+  const s = fresh();
+  s.energy = price(s, 0, 100);
+  assert.ok(buy(s, 0, 100));
+  assert.equal(s.counts[0], 100);
+  assert.equal(s.energy, 0);
+  assert.equal(buy(s, 0, 101), false);
+});
+test("v2 saves retain owned relics and extend new arrays", () => {
+  const old = {
+    ...fresh(),
+    counts: Array(12).fill(8),
+    relics: [1, 2, 0, 0, 1, 0, 0, 1],
+    echoes: 17,
+  };
+  const s = parseSave(old)!;
+  assert.ok(s);
+  assert.deepEqual(s.relics.slice(0, 8), old.relics);
+  assert.equal(s.relics.length, 14);
+  assert.deepEqual(s.counts.slice(12), [0, 0, 0, 0]);
+  assert.equal(s.echoes, 17);
+});
+test("specializations are exclusive per run and reset after ascension", () => {
+  const s = fresh();
+  s.counts[0] = 10;
+  assert.ok(chooseRole(s, 0));
+  assert.equal(production(s), 16);
+  assert.equal(price(s, 1), 85);
+  assert.equal(chooseRole(s, 2), false);
+  s.earned = 1e6;
+  assert.equal(ascend(s).role, -1);
+  const e = fresh();
+  chooseRole(e, 1);
+  assert.equal(worldPrice(e, 1), 10500);
+});
+test("silent trial suspends inherited powers and blocks every manual harvest", () => {
+  const s = fresh();
+  s.ascensions = 1;
+  s.shards = 10000;
+  s.relics = relics.map((r) => r.max);
+  s.echoes = 300;
+  const t = startTrial(s, 0);
+  assert.equal(t.counts[0], 1);
+  assert.equal(t.counts[5], 0);
+  assert.equal(production(t), 0.8);
+  assert.equal(harvest(t), 0);
+  assert.equal(t.clicks, 0);
+  assert.equal(t.energy, 0);
+  assert.equal(t.echoes, 300);
+  assert.equal(ascend(t), t);
+});
+test("three pillars blocks a fourth type, including automation", () => {
+  const s = fresh();
+  s.ascensions = 1;
+  const t = startTrial(s, 1);
+  t.energy = 1e15;
+  buy(t, 0, 1);
+  buy(t, 1, 1);
+  buy(t, 2, 1);
+  assert.equal(buy(t, 3, 1), false);
+  assert.ok(buy(t, 1, 100));
+  t.autoEnabled = true;
+  automate(t, 1000);
+  assert.equal(t.counts.filter((n) => n > 0).length, 3);
+});
+test("unwritten sky blocks research, trial finish pays once and preserves legacy", () => {
+  const s = fresh();
+  s.ascensions = 1;
+  s.echoes = 7;
+  const t = startTrial(s, 2);
+  t.energy = 1e9;
+  assert.equal(learn(t, 0), false);
+  assert.equal(finishTrial(t), t);
+  t.earned = 1e7;
+  const n = finishTrial(t);
+  assert.equal(n.echoes, 57);
+  assert.deepEqual(n.completedTrials, [2]);
+  assert.equal(n.trial, -1);
+  const repeat = startTrial(n, 2);
+  repeat.earned = 1e7;
+  assert.equal(finishTrial(repeat).echoes, 57);
+});
+test("abandoning trials grants neither rewards nor ascension currency", () => {
+  const s = fresh();
+  s.ascensions = 1;
+  const t = startTrial(s, 0);
+  t.earned = 1e12;
+  const n = finishTrial(t, true);
+  assert.equal(n.echoes, 0);
+  assert.equal(n.shards, 0);
+  assert.deepEqual(n.completedTrials, []);
+});
+test("automation respects its unlock, per-tick budget, cadence, and pause", () => {
+  const s = fresh();
+  s.energy = 10000;
+  s.autoEnabled = true;
+  assert.equal(automate(s, 1000), 0);
+  s.ascensions = 1;
+  s.autoBudget = 10;
+  assert.ok(automate(s, 1000) > 0);
+  assert.ok(s.energy >= 9000);
+  const balance = s.energy;
+  assert.equal(automate(s, 1500), 0);
+  assert.equal(s.energy, balance);
+  s.autoEnabled = false;
+  assert.equal(automate(s, 3000), 0);
+});
+test("artifact slots enforce unlocks and the three-slot cap", () => {
+  const s = fresh();
+  assert.equal(toggleArtifact(s, 4), false);
+  s.bestWorld = 3;
+  s.comets = 10;
+  s.completedTrials = [0, 1, 2];
+  assert.ok(toggleArtifact(s, 0));
+  assert.ok(toggleArtifact(s, 1));
+  assert.ok(toggleArtifact(s, 2));
+  assert.equal(toggleArtifact(s, 3), false);
+  assert.ok(toggleArtifact(s, 1));
+  assert.ok(toggleArtifact(s, 4));
+  assert.equal(s.artifacts.length, 3);
+});
+test("world ability cooldown carries across world purchases", () => {
+  const s = fresh();
+  assert.ok(worldAbility(s, 1000));
+  assert.equal(worldAbility(s, 1001), false);
+  s.energy = 1e8;
+  explore(s, 1);
+  assert.equal(worldAbility(s, 2000), false);
+  assert.ok(worldAbility(s, 91000));
+});
+test("cosmic magnet catches only once and is suspended in trials", () => {
+  const s = fresh();
+  s.relics[11] = 1;
+  s.nextComet = 1000;
+  passiveActions(s, 1000);
+  assert.equal(s.comets, 1);
+  passiveActions(s, 1001);
+  assert.equal(s.comets, 1);
+  s.trial = 0;
+  s.nextComet = 2000;
+  passiveActions(s, 2000);
+  assert.equal(s.comets, 1);
+});
+test("invalid expedition settings are rejected by save parser", () => {
+  assert.equal(parseSave({ ...fresh(), role: 9 }), null);
+  assert.equal(parseSave({ ...fresh(), trial: 3 }), null);
+  assert.equal(parseSave({ ...fresh(), artifacts: [0, 1, 2, 3] }), null);
+  assert.equal(parseSave({ ...fresh(), autoBudget: 100 }), null);
 });

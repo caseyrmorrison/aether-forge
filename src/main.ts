@@ -1,5 +1,19 @@
 import "./style.css";
 import {
+  roles,
+  trials,
+  chooseRole,
+  toggleArtifact,
+  startTrial,
+  finishTrial,
+  automationUnlocked,
+  passiveActions,
+  canBuild,
+  learn,
+  explore,
+  worldPrice,
+  worldAbilities,
+  worldAbility,
   units,
   research,
   worlds,
@@ -29,6 +43,7 @@ import {
   ascensionReward,
   type State,
 } from "./game";
+import { expeditionMarkup } from "./expedition";
 import { createScene } from "./scene";
 let state: State = load(),
   tab = "structures",
@@ -38,8 +53,8 @@ const $ = <T extends HTMLElement = HTMLElement>(s: string) =>
   document.querySelector<T>(s)!;
 $("#app").innerHTML = `
 <header class="topbar"><a class="brand" href="./" aria-label="Aether Forge home"><span class="brand-icon">✧</span><span>AETHER<span class="brand-light">FORGE</span><small>AN IDLE ODYSSEY</small></span></a><div class="sector"><span class="live-dot"></span> SOLO EXPEDITION <span class="divider">/</span> SECTOR 001</div><div class="top-actions"><span id="save-status">✓ Progress saved</span><button id="sound" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♫</button><button id="settings" class="icon-button" aria-label="Settings" title="Settings">⚙</button></div></header>
-<main><section class="world-panel"><div class="world-top"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><span class="world-badge">◈ <span id="world-number">WORLD 01</span></span></div><div class="world-heading"><h1 id="world-name"></h1><p id="world-description"></p></div><div class="scene-container"><div class="scene-halo"></div><canvas id="world-canvas" tabindex="0" role="button" aria-label="Harvest aether from the crystal. Press Enter or Space."></canvas><div class="scene-caption"><span class="live-dot"></span> <span id="world-type"></span><span class="coordinates">07.24° N &nbsp; 38.91° E</span></div><div class="floating-label"><span>✧</span> <span>CORE STATUS<small>Resonating</small></span></div><div id="particles"></div></div><div class="harvest-area"><span class="eyebrow">A SMALL TOUCH. AN INFINITE POSSIBILITY.</span><button id="harvest"><span>✧</span> Harvest aether <span id="click-value">+1</span></button><div class="harvest-hint">Click the crystal or press <kbd>Space</kbd> to harvest</div></div><div class="active-systems"><button id="overdrive" class="ability-button"><span>⚡ Core overdrive</span><small id="boost-status"></small><div class="progress-track"><div id="charge-progress"></div></div></button><button id="comet" class="ability-button comet-button"><span>✦ Comet scanner</span><small id="comet-status"></small></button></div><div class="journey-card"><div class="journey-icon">⌁</div><div class="journey-content"><div class="journey-title"><span id="goal-title"></span><span id="goal-percent"></span></div><div class="progress-track"><div id="goal-progress"></div></div><p id="goal-description"></p></div><span class="journey-arrow">↗</span></div><footer class="world-footer"><span>✦ &nbsp; THE UNIVERSE STARTS WITH YOU.</span><span>v2.0 <span class="live-dot"></span></span></footer></section>
-<section class="control-panel"><div class="resource-card"><div class="resource-label"><span>✧ &nbsp; AETHER RESERVE</span><span class="pill">LIVE</span></div><div class="energy-number" id="energy">0</div><div class="resource-bottom"><span><i class="live-dot"></i><strong id="rate">0</strong> / second</span><span id="multiplier">1× world bonus</span></div><svg class="sparkline" viewBox="0 0 500 45" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#8de0b7" stop-opacity=".12"/><stop offset="1" stop-color="#8de0b7" stop-opacity="0"/></linearGradient></defs><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0V45H0Z" fill="url(#fade)"/><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0" fill="none" stroke="#7aba9b" stroke-opacity=".4" stroke-width="1.4"/></svg></div><nav class="tabs" aria-label="Upgrade categories"><button data-tab="structures" class="active">Structures <span>${units.length}</span></button><button data-tab="research">Research <span id="research-count">0/${research.length}</span></button><button data-tab="worlds">Worlds <span>${worlds.length}</span></button><button data-tab="legacy">Legacy <span id="legacy-ready">∞</span></button></nav><div class="legacy-wallet"><span>◈ <strong id="echoes">0</strong> Echoes <small>Permanent currency</small></span><span id="legacy-power"></span></div><div class="section-heading"><div><h2 id="section-title">Build your constellation</h2><p id="section-description">Little by little, extraordinary things happen.</p></div><div class="quantity" aria-label="Purchase quantity"><button data-qty="1" class="active">×1</button><button data-qty="10">×10</button></div></div><div id="items"></div><div class="ascend-card"><span class="ascend-icon">✺</span><div><h3>A new beginning awaits</h3><p id="ascend-description">Reach 100K aether to unlock Ascension.</p></div><button id="ascend" aria-label="Ascend">↗</button></div><div class="stats-strip"><span><strong id="total-structures">0</strong> structures built</span><span><strong id="total-earned">0</strong> lifetime aether</span></div></section></main><div id="toast" role="status"></div><dialog id="dialog"><div id="dialog-content"></div><button id="close-dialog" class="dialog-close" aria-label="Close dialog">×</button></dialog>`;
+<main><section class="world-panel"><div class="world-top"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><span class="world-badge">◈ <span id="world-number">WORLD 01</span></span></div><div class="world-heading"><h1 id="world-name"></h1><p id="world-description"></p></div><div class="scene-container"><div class="scene-halo"></div><canvas id="world-canvas" tabindex="0" role="button" aria-label="Harvest aether from the crystal. Press Enter or Space."></canvas><div class="scene-caption"><span class="live-dot"></span> <span id="world-type"></span><span class="coordinates">07.24° N &nbsp; 38.91° E</span></div><div class="floating-label"><span>✧</span> <span>CORE STATUS<small>Resonating</small></span></div><div id="particles"></div></div><div class="harvest-area"><span class="eyebrow">A SMALL TOUCH. AN INFINITE POSSIBILITY.</span><button id="harvest"><span>✧</span> Harvest aether <span id="click-value">+1</span></button><div class="harvest-hint">Click the crystal or press <kbd>Space</kbd> to harvest</div></div><div class="active-systems"><button id="overdrive" class="ability-button"><span>⚡ Core overdrive</span><small id="boost-status"></small><div class="progress-track"><div id="charge-progress"></div></div></button><button id="comet" class="ability-button comet-button"><span>✦ Comet scanner</span><small id="comet-status"></small></button></div><button id="world-ability" class="ability-button world-ability"><span id="ability-name"></span><small id="ability-status"></small></button><div id="run-banner" class="run-banner"></div><div class="journey-card"><div class="journey-icon">⌁</div><div class="journey-content"><div class="journey-title"><span id="goal-title"></span><span id="goal-percent"></span></div><div class="progress-track"><div id="goal-progress"></div></div><p id="goal-description"></p></div><span class="journey-arrow">↗</span></div><footer class="world-footer"><span>✦ &nbsp; THE UNIVERSE STARTS WITH YOU.</span><span>v3.0 <span class="live-dot"></span></span></footer></section>
+<section class="control-panel"><div class="resource-card"><div class="resource-label"><span>✧ &nbsp; AETHER RESERVE</span><span class="pill">LIVE</span></div><div class="energy-number" id="energy">0</div><div class="resource-bottom"><span><i class="live-dot"></i><strong id="rate">0</strong> / second</span><span id="multiplier">1× world bonus</span></div><svg class="sparkline" viewBox="0 0 500 45" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#8de0b7" stop-opacity=".12"/><stop offset="1" stop-color="#8de0b7" stop-opacity="0"/></linearGradient></defs><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0V45H0Z" fill="url(#fade)"/><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0" fill="none" stroke="#7aba9b" stroke-opacity=".4" stroke-width="1.4"/></svg></div><nav class="tabs" aria-label="Upgrade categories"><button data-tab="structures" class="active">Structures <span>${units.length}</span></button><button data-tab="research">Research <span id="research-count">0/${research.length}</span></button><button data-tab="worlds">Worlds <span>${worlds.length}</span></button><button data-tab="legacy">Legacy <span id="legacy-ready">∞</span></button><button data-tab="expedition">Expedition <span>✦</span></button></nav><div class="legacy-wallet"><span>◈ <strong id="echoes">0</strong> Echoes <small>Permanent currency</small></span><span id="legacy-power"></span></div><div class="section-heading"><div><h2 id="section-title">Build your constellation</h2><p id="section-description">Little by little, extraordinary things happen.</p></div><div class="quantity" aria-label="Purchase quantity"><button data-qty="1" class="active">×1</button><button data-qty="10">×10</button><button data-qty="100">×100</button></div></div><div id="items"></div><div class="ascend-card"><span class="ascend-icon">✺</span><div><h3>A new beginning awaits</h3><p id="ascend-description">Reach 100K aether to unlock Ascension.</p></div><button id="ascend" aria-label="Ascend">↗</button></div><div class="stats-strip"><span><strong id="total-structures">0</strong> structures built</span><span><strong id="total-earned">0</strong> lifetime aether</span></div></section></main><div id="toast" role="status"></div><dialog id="dialog"><div id="dialog-content"></div><button id="close-dialog" class="dialog-close" aria-label="Close dialog">×</button></dialog>`;
 let toastTimer: ReturnType<typeof setTimeout>;
 let scene: ReturnType<typeof createScene> | undefined;
 try {
@@ -83,6 +98,7 @@ function toast(message: string) {
 }
 function harvest() {
   const amount = harvestEnergy(state);
+  if (amount <= 0) return;
   scene?.pulse();
   tone();
   const p = document.createElement("span");
@@ -113,9 +129,9 @@ document.addEventListener("keydown", (e) => {
     harvest();
   }
 });
-function renderItems() {
+function renderItems(resetScroll = false) {
   const list = $("#items");
-  list.scrollTop = 0;
+  const savedScroll = resetScroll ? 0 : list.scrollTop;
   $(".quantity").style.visibility = tab === "structures" ? "visible" : "hidden";
   $("#section-title").textContent =
     tab === "structures"
@@ -124,7 +140,9 @@ function renderItems() {
         ? "Discover the extraordinary"
         : tab === "legacy"
           ? "The things you carry forward"
-          : "Beyond the familiar";
+          : tab === "expedition"
+            ? "Chart your own path"
+            : "Beyond the familiar";
   $("#section-description").textContent =
     tab === "structures"
       ? "Little by little, extraordinary things happen."
@@ -132,7 +150,9 @@ function renderItems() {
         ? "Every discovery opens a new possibility."
         : tab === "legacy"
           ? "Earn Echoes. Unlock relics. Shape your next expedition."
-          : "Each new world multiplies all your production.";
+          : tab === "expedition"
+            ? "Specialize, automate, and take on a different kind of run."
+            : "Each new world multiplies all your production.";
   if (tab === "structures")
     list.innerHTML = units
       .map(
@@ -144,14 +164,14 @@ function renderItems() {
     list.innerHTML = research
       .map(
         (r, i) =>
-          `<button class="item" data-research="${i}"><span class="item-icon icon-${i % 6}">${["⌁", "⚛", "◈", "✧", "⬡", "∞"][i % 6]}</span><span class="item-content"><span class="item-title">${r.name}</span><span class="item-description">${r.detail}</span><span class="item-rate">PERMANENT THIS EXPEDITION</span></span><span class="item-price">${state.upgrades.includes(i) ? "✓ Learned" : "✧ " + format(r.cost)}</span></button>`,
+          `<button class="item" data-research="${i}"><span class="item-icon icon-${i % 6}">${["⌁", "⚛", "◈", "✧", "⬡", "∞"][i % 6]}</span><span class="item-content"><span class="item-title">${r.name}</span><span class="item-description">${r.detail}</span><span class="item-rate">PERMANENT THIS EXPEDITION</span></span><span class="item-price" id="research-price-${i}">${state.upgrades.includes(i) ? "✓ Learned" : "✧ " + format(r.cost)}</span></button>`,
       )
       .join("");
   if (tab === "worlds")
     list.innerHTML = worlds
       .map(
         (w, i) =>
-          `<button class="item world-item" data-world="${i}"><span class="item-icon icon-${i % 6}">◎</span><span class="item-content"><span class="item-title">${w.name}</span><span class="item-description">${w.type.toLowerCase()}</span><span class="item-rate">${w.multiplier}× all production & harvests</span></span><span class="item-price">${i === state.world ? "● Exploring" : i < state.world ? "✓ Discovered" : "✧ " + format(w.cost)}</span></button>`,
+          `<button class="item world-item" data-world="${i}"><span class="item-icon icon-${i % 6}">◎</span><span class="item-content"><span class="item-title">${w.name}</span><span class="item-description">${w.type.toLowerCase()}</span><span class="item-rate">${w.multiplier}× all production & harvests</span></span><span class="item-price">${i === state.world ? "● Exploring" : i < state.world ? "✓ Discovered" : "✧ " + format(worldPrice(state, i))}</span></button>`,
       )
       .join("");
   if (tab === "legacy")
@@ -170,6 +190,8 @@ function renderItems() {
             `<button class="item challenge-item" data-challenge="${i}"><span class="item-icon">✧</span><span class="item-content"><span class="item-title">${c.name}</span><span class="item-description">${c.detail}</span><span class="item-rate" id="challenge-progress-${i}"></span></span><span class="item-price" id="challenge-reward-${i}"></span></button>`,
         )
         .join("");
+  if (tab === "expedition") list.innerHTML = expeditionMarkup(state);
+  list.scrollTop = savedScroll;
   update();
 }
 $("#items").addEventListener("click", (e) => {
@@ -189,18 +211,14 @@ $("#items").addEventListener("click", (e) => {
   if (button.dataset.research !== undefined) {
     const i = Number(button.dataset.research),
       r = research[i];
-    if (!state.upgrades.includes(i) && state.energy >= r.cost) {
-      state.energy -= r.cost;
-      state.upgrades.push(i);
+    if (learn(state, i)) {
       toast(r.name + " discovered.");
-      renderItems();
+      scene?.burst();
     }
   }
   if (button.dataset.world !== undefined) {
     const i = Number(button.dataset.world);
-    if (i === state.world + 1 && state.energy >= worlds[i].cost) {
-      state.energy -= worlds[i].cost;
-      state.world = i;
+    if (explore(state, i)) {
       scene?.setWorld(worlds[i].color, i);
       toast(
         "Welcome to " + worlds[i].name + ". Your world bonus has increased.",
@@ -222,6 +240,39 @@ $("#items").addEventListener("click", (e) => {
       toast("Challenge complete. +" + challenges[i].reward + " Echoes.");
     }
   }
+  if (
+    button.dataset.role !== undefined &&
+    chooseRole(state, Number(button.dataset.role))
+  ) {
+    renderItems();
+    toast("Specialization selected for this expedition.");
+  }
+  if (
+    button.dataset.artifact !== undefined &&
+    toggleArtifact(state, Number(button.dataset.artifact))
+  )
+    renderItems();
+  if (button.dataset.trial !== undefined) {
+    const i = Number(button.dataset.trial);
+    confirmRunReset(
+      `Begin ${trials[i].name}?`,
+      "This resets your current expedition without granting ascension rewards. Permanent currencies, relics, and records are kept. Trial power restrictions apply.",
+      () => startTrial(state, i),
+    );
+  }
+  if (button.id === "finish-trial") {
+    const next = finishTrial(state);
+    if (next !== state) {
+      replaceRun(next);
+      toast("Trial completed! Your permanent rewards are unlocked.");
+    }
+  }
+  if (button.id === "abandon-trial")
+    confirmRunReset(
+      "Abandon this trial?",
+      "Start a fresh normal expedition. No trial reward will be granted. Your permanent progress is kept.",
+      () => finishTrial(state, true),
+    );
   recordMilestones(state);
   update();
   persist();
@@ -232,7 +283,7 @@ document.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) =>
     document
       .querySelectorAll("[data-tab]")
       .forEach((x) => x.classList.toggle("active", x === b));
-    renderItems();
+    renderItems(true);
   }),
 );
 document.querySelectorAll<HTMLButtonElement>("[data-qty]").forEach((b) =>
@@ -249,7 +300,12 @@ function update() {
   const rate = activeProduction(state);
   $("#energy").textContent = format(state.energy);
   $("#rate").textContent = format(rate);
-  $("#click-value").textContent = "+" + format(clickPower(state));
+  $("#click-value").textContent =
+    "+" +
+    format(
+      clickPower(state) *
+        (Date.now() < state.boostUntil ? boostMultiplier(state) : 1),
+    );
   $("#multiplier").textContent =
     worlds[state.world].multiplier + "× world bonus";
   $("#world-name").textContent = worlds[state.world].name;
@@ -273,20 +329,53 @@ function update() {
         format(cost) +
         `<small>BUILD ${quantity > 1 ? "×" + quantity : "+"}</small>`;
       $(`#owned-${i}`).textContent = String(state.counts[i]);
-      $<HTMLButtonElement>(`[data-buy="${i}"]`).disabled = state.energy < cost;
+      $<HTMLButtonElement>(`[data-buy="${i}"]`).disabled =
+        state.energy < cost || !canBuild(state, i);
     });
   if (tab === "research")
     research.forEach((r, i) => {
       $<HTMLButtonElement>(`[data-research="${i}"]`).disabled =
-        state.upgrades.includes(i) || state.energy < r.cost;
+        state.upgrades.includes(i) ||
+        state.energy < r.cost ||
+        state.trial === 2;
+      $(`#research-price-${i}`).textContent = state.upgrades.includes(i)
+        ? "✓ Learned"
+        : "✧ " + format(r.cost);
     });
   if (tab === "worlds")
     worlds.forEach((w, i) => {
       $<HTMLButtonElement>(`[data-world="${i}"]`).disabled =
-        i !== state.world + 1 || state.energy < w.cost;
+        i !== state.world + 1 || state.energy < worldPrice(state, i);
     });
   const now = Date.now(),
     boosting = now < state.boostUntil;
+  $<HTMLButtonElement>("#harvest").disabled = state.trial === 0;
+  $("#world-canvas").setAttribute("aria-disabled", String(state.trial === 0));
+  const ability = worldAbilities[state.world % 4];
+  $("#ability-name").textContent = "✺ " + ability.name;
+  $("#ability-status").textContent =
+    now < state.worldReady
+      ? `Recharging · ${Math.ceil((state.worldReady - now) / 1000)}s`
+      : ability.detail;
+  $<HTMLButtonElement>("#world-ability").disabled = now < state.worldReady;
+  $("#run-banner").textContent =
+    (state.role >= 0
+      ? roles[state.role].name
+      : "Choose a specialization in Expedition") +
+    (state.trial >= 0
+      ? " · TRIAL: " + trials[state.trial].name
+      : " · Normal expedition");
+  scene?.setActivity(
+    state.counts.reduce((a, b) => a + b, 0),
+    boosting,
+    cometAvailable(state),
+  );
+  if (tab === "expedition" && state.trial >= 0) {
+    $(`#trial-progress-${state.trial}`).textContent =
+      format(state.earned) + " / " + format(trials[state.trial].target);
+    $<HTMLButtonElement>("#finish-trial").disabled =
+      state.earned < trials[state.trial].target;
+  }
   $("#echoes").textContent = format(state.echoes);
   const readyChallenges = challenges.filter(
     (c, i) => !state.claimed.includes(i) && c.value(state) >= c.target,
@@ -386,7 +475,7 @@ function update() {
     {
       at: 3e13,
       title: "A legacy worth earning",
-      text: "Complete all research and unlock the Genesis covenant.",
+      text: "Learn 18 research upgrades and unlock the Genesis covenant.",
     },
   );
   const goal = goals.find((g) => state.earned < g.at) ?? {
@@ -400,12 +489,15 @@ function update() {
   $("#goal-progress").style.width = percent + "%";
   $("#goal-description").textContent = goal.text;
   const reward = ascensionReward(state);
+  $<HTMLButtonElement>("#ascend").disabled = state.trial >= 0;
   $("#ascend-description").textContent =
-    reward > 0
-      ? `Ascend: +${format(reward)} stardust · +${echoReward(state)} Echoes`
-      : state.shards > 0
-        ? `${state.shards} stardust · +${state.shards * 15}% permanent bonus`
-        : "Reach 100K aether to unlock Ascension.";
+    state.trial >= 0
+      ? "Finish or abandon your trial in Expedition."
+      : reward > 0
+        ? `Ascend: +${format(reward)} stardust · +${echoReward(state)} Echoes`
+        : state.shards > 0
+          ? `${state.shards} stardust · +${state.shards * 15}% permanent bonus`
+          : "Reach 100K aether to unlock Ascension.";
 }
 function persist() {
   const ok = save(state);
@@ -491,13 +583,58 @@ $("#overdrive").addEventListener("click", () => {
 $("#comet").addEventListener("click", () => {
   const reward = catchComet(state);
   if (reward) {
-    scene?.pulse();
+    scene?.burst();
     tone();
     toast("Comet captured! +" + format(reward) + " aether and +20 charge.");
     persist();
     update();
   }
 });
+$("#world-ability").addEventListener("click", () => {
+  if (worldAbility(state)) {
+    scene?.burst();
+    tone();
+    update();
+    persist();
+  }
+});
+$("#items").addEventListener("change", (e) => {
+  const target = e.target as HTMLInputElement;
+  if (target.id === "auto-enabled" && automationUnlocked(state))
+    state.autoEnabled = target.checked;
+  if (
+    target.id === "auto-policy" &&
+    ["efficient", "cheapest"].includes(target.value)
+  )
+    state.autoPolicy = target.value;
+  if (
+    target.id === "auto-budget" &&
+    [10, 25, 50].includes(Number(target.value))
+  )
+    state.autoBudget = Number(target.value);
+  persist();
+});
+function replaceRun(next: State) {
+  state = next;
+  previous = Date.now();
+  scene?.setWorld(worlds[state.world].color, state.world);
+  renderItems();
+  persist();
+}
+function confirmRunReset(
+  title: string,
+  description: string,
+  action: () => State,
+) {
+  $("#dialog-content").innerHTML =
+    `<h2>${title}</h2><p>${description}</p><button class="primary" id="confirm-run">Confirm and begin</button>`;
+  dialog.showModal();
+  $("#confirm-run").addEventListener("click", () => {
+    const next = action();
+    dialog.close();
+    if (next !== state) replaceRun(next);
+  });
+}
 scene?.setWorld(worlds[state.world].color, state.world);
 renderItems();
 let previous = Date.now();
@@ -505,6 +642,7 @@ setInterval(() => {
   const now = Date.now();
   advance(state, previous, now);
   previous = now;
+  if (!document.hidden) passiveActions(state, now);
   update();
 }, 100);
 setInterval(persist, 10000);

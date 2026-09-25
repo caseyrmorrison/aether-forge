@@ -1107,3 +1107,102 @@ dialog p {
     font-size: 9px;
   }
 }
+/* Expedition command deck */
+.tabs {
+  gap: 15px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tabs button {
+  flex-shrink: 0;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  color: #bad0c4;
+  font-size: 11px;
+}
+.setting-row select {
+  color: #d1e8d9;
+  background: #1b2c26;
+  border: 1px solid #98bcaa40;
+  border-radius: 5px;
+  padding: 8px;
+  max-width: 65%;
+}
+.setting-row input {
+  accent-color: #b8efcc;
+  width: 18px;
+  height: 18px;
+}
+.trial-card {
+  border: 1px solid #c4a6ee25;
+  background: linear-gradient(120deg, #a693cd12, #182321);
+  padding: 18px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.trial-card strong {
+  font-size: 13px;
+  color: #d9c7f1;
+}
+.trial-card p {
+  font-size: 11px;
+  color: #a39caf;
+  line-height: 1.65;
+}
+.secondary {
+  border: 1px solid #c5aee733;
+  background: transparent;
+  border-radius: 6px;
+  color: #bda7d3;
+  padding: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+.world-ability {
+  width: 100%;
+  min-height: 66px;
+  margin-bottom: 12px;
+  background: linear-gradient(110deg, #20403380, #1b2334);
+}
+.run-banner {
+  font-size: 10px;
+  color: #acb9ae;
+  text-align: center;
+  padding: 4px 0 12px;
+}
+#items > * {
+  flex-shrink: 0;
+}
+@media (max-width: 800px) {
+  .setting-row select {
+    font-size: 12px;
+  }
+  .tabs {
+    gap: 18px;
+  }
+  .quantity button {
+    min-height: 30px;
+    min-width: 31px;
+  }
+  .section-heading {
+    gap: 8px;
+  }
+  .world-ability {
+    margin-bottom: 10px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ability-button.ready {
+    animation: ready-glow 2s ease-in-out infinite;
+  }
+  @keyframes ready-glow {
+    50% {
+      box-shadow: 0 0 20px #d5e69d35;
+    }
+  }
+}

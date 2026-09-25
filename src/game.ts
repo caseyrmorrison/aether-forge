@@ -83,6 +83,34 @@ export const units = [
     rate: 7e8,
     icon: "✵",
   },
+  {
+    name: "Chrono cathedral",
+    detail: "Borrow a little time from every possible future.",
+    base: 2000000000000.0,
+    rate: 10000000000.0,
+    icon: "\u2736",
+  },
+  {
+    name: "Void nursery",
+    detail: "Raise newborn universes in the dark.",
+    base: 50000000000000.0,
+    rate: 200000000000.0,
+    icon: "\u2736",
+  },
+  {
+    name: "Paradox lattice",
+    detail: "Harvest two contradictory realities at once.",
+    base: 2000000000000000.0,
+    rate: 5000000000000.0,
+    icon: "\u2736",
+  },
+  {
+    name: "Omniverse forge",
+    detail: "Every universe becomes another ember.",
+    base: 1e17,
+    rate: 200000000000000.0,
+    icon: "\u2736",
+  },
 ];
 export const research = [
   {
@@ -193,6 +221,54 @@ export const research = [
     cost: 3e13,
     kind: "production",
   },
+  {
+    name: "Temporal industry",
+    detail: "Structures 13\u201316 produce 5\u00d7 more.",
+    cost: 100000000000000.0,
+    kind: "industry",
+  },
+  {
+    name: "Comet collapse",
+    detail: "Comet rewards increase 5\u00d7.",
+    cost: 500000000000000.0,
+    kind: "comet",
+  },
+  {
+    name: "Resonance cascade",
+    detail: "All production increases 5\u00d7.",
+    cost: 2000000000000000.0,
+    kind: "production",
+  },
+  {
+    name: "Supercritical core",
+    detail: "Overdrive gains another +5\u00d7 multiplier.",
+    cost: 1e16,
+    kind: "overdrive",
+  },
+  {
+    name: "Chrono synthesis",
+    detail: "All production increases 5\u00d7.",
+    cost: 8e16,
+    kind: "production",
+  },
+  {
+    name: "Hand of creation",
+    detail: "Harvests gain another 25% of base production.",
+    cost: 5e17,
+    kind: "synergy",
+  },
+  {
+    name: "The impossible engine",
+    detail: "All production increases 10\u00d7.",
+    cost: 4e18,
+    kind: "production",
+  },
+  {
+    name: "Beyond mathematics",
+    detail: "All production increases 10\u00d7.",
+    cost: 4e19,
+    kind: "production",
+  },
 ];
 export const worlds = [
   {
@@ -260,6 +336,38 @@ export const worlds = [
     description:
       "This is not the end of the universe. It is the beginning of yours.",
   },
+  {
+    name: "Chronos Garden",
+    type: "TEMPORAL WORLD",
+    cost: 100000000000000.0,
+    multiplier: 256,
+    color: 9240508,
+    description: "Every second blooms into a thousand possible futures.",
+  },
+  {
+    name: "Mirror Cosmos",
+    type: "PARADOX WORLD",
+    cost: 8000000000000000.0,
+    multiplier: 512,
+    color: 16758248,
+    description: "You see a universe. It sees you back.",
+  },
+  {
+    name: "The Silent Crown",
+    type: "VOID WORLD",
+    cost: 1e18,
+    multiplier: 1024,
+    color: 10263295,
+    description: "Even the silence has learned to create.",
+  },
+  {
+    name: "Infinity Unbound",
+    type: "OMNIVERSE WORLD",
+    cost: 1e20,
+    multiplier: 2048,
+    color: 16771763,
+    description: "There was never an edge. Only another beginning.",
+  },
 ];
 export type State = {
   energy: number;
@@ -284,6 +392,15 @@ export type State = {
   charge: number;
   boostUntil: number;
   nextComet: number;
+  role: number;
+  trial: number;
+  completedTrials: number[];
+  artifacts: number[];
+  autoEnabled: boolean;
+  autoPolicy: string;
+  autoBudget: number;
+  nextAuto: number;
+  worldReady: number;
 };
 export const relics = [
   {
@@ -348,10 +465,67 @@ export const relics = [
     cost: 40,
     max: 1,
     gate: 7,
-    requirement: "Reach Genesis Beyond AND learn all 18 research upgrades",
+    requirement: "Reach Genesis Beyond AND learn 18 research upgrades",
+  },
+  {
+    name: "Star devourer",
+    detail: "Every 100 structures doubles production, up to 32\u00d7.",
+    cost: 60,
+    max: 1,
+    gate: 8,
+    requirement: "Complete the Silent Orbit trial",
+  },
+  {
+    name: "Chrono phoenix",
+    detail: "Start normal expeditions with 10 Stellar engines.",
+    cost: 80,
+    max: 1,
+    gate: 9,
+    requirement: "Reach Chronos Garden (world 9)",
+  },
+  {
+    name: "Storm sovereign",
+    detail: "Overdrive gains +10\u00d7 power and +30 seconds.",
+    cost: 100,
+    max: 1,
+    gate: 10,
+    requirement: "Complete the Three Pillars trial",
+  },
+  {
+    name: "Cosmic magnet",
+    detail: "Automatically capture visible comets while the game is open.",
+    cost: 75,
+    max: 1,
+    gate: 11,
+    requirement: "Catch 50 comets",
+  },
+  {
+    name: "Archive of infinity",
+    detail: "Start normal expeditions with the first 12 research upgrades.",
+    cost: 120,
+    max: 1,
+    gate: 12,
+    requirement: "Complete the Unwritten Sky trial",
+  },
+  {
+    name: "Crown of everything",
+    detail: "25\u00d7 production and double ascension Echoes.",
+    cost: 250,
+    max: 1,
+    gate: 13,
+    requirement: "Reach Infinity Unbound and learn 26 research upgrades",
   },
 ];
 export const fresh = (): State => ({
+  role: -1,
+  trial: -1,
+  completedTrials: [],
+  artifacts: [],
+  autoEnabled: false,
+  autoPolicy: "efficient",
+  autoBudget: 25,
+  nextAuto: 0,
+  worldReady: 0,
   energy: 0,
   earned: 0,
   lifetime: 0,
@@ -399,6 +573,18 @@ export function relicUnlocked(s: State, i: number) {
       return s.bestResearch >= 12;
     case 7:
       return s.bestWorld >= 7 && s.bestResearch >= 18;
+    case 8:
+      return s.completedTrials.includes(0);
+    case 9:
+      return s.bestWorld >= 8;
+    case 10:
+      return s.completedTrials.includes(1);
+    case 11:
+      return s.comets >= 50;
+    case 12:
+      return s.completedTrials.includes(2);
+    case 13:
+      return s.bestWorld >= 11 && s.bestResearch >= 26;
     default:
       return false;
   }
@@ -462,7 +648,7 @@ export const challenges = [
   },
   {
     name: "The final theorem",
-    detail: "Learn all 18 research upgrades in one expedition.",
+    detail: "Learn 18 research upgrades in one expedition.",
     reward: 25,
     value: (s: State) => s.bestResearch,
     target: 18,
@@ -475,6 +661,91 @@ export function claimChallenge(s: State, i: number) {
   s.echoes += c.reward;
   return true;
 }
+export const roles = [
+  {
+    name: "Engineer",
+    detail: "2× structure production; structures cost 15% less.",
+  },
+  {
+    name: "Explorer",
+    detail:
+      "3× comet rewards; worlds cost 30% less; comet cooldown is 40 seconds.",
+  },
+  {
+    name: "Channeler",
+    detail: "5× harvest power; 2× charge from harvests; +10 seconds Overdrive.",
+  },
+];
+export const trials = [
+  {
+    name: "Silent Orbit",
+    detail: "No manual harvests. Begin with one drone. Earn 1M aether.",
+    target: 1e6,
+    reward: 20,
+  },
+  {
+    name: "Three Pillars",
+    detail: "Only three distinct structure types. Earn 100M aether.",
+    target: 1e8,
+    reward: 35,
+  },
+  {
+    name: "Unwritten Sky",
+    detail: "Research is disabled. Earn 10M aether.",
+    target: 1e7,
+    reward: 50,
+  },
+];
+export const artifacts = [
+  {
+    name: "Verdant seed",
+    detail: "+25% production.",
+    gate: "Reach world 3",
+    unlocked: (s: State) => s.bestWorld >= 2,
+  },
+  {
+    name: "Meteor lens",
+    detail: "2× comet rewards.",
+    gate: "Catch 10 comets",
+    unlocked: (s: State) => s.comets >= 10,
+  },
+  {
+    name: "Pulse prism",
+    detail: "+5× Overdrive power.",
+    gate: "Complete Silent Orbit",
+    unlocked: (s: State) => s.completedTrials.includes(0),
+  },
+  {
+    name: "Architect shard",
+    detail: "Structures cost 15% less.",
+    gate: "Complete Three Pillars",
+    unlocked: (s: State) => s.completedTrials.includes(1),
+  },
+  {
+    name: "Forbidden page",
+    detail: "3× production.",
+    gate: "Complete Unwritten Sky",
+    unlocked: (s: State) => s.completedTrials.includes(2),
+  },
+];
+const rank = (s: State, i: number) => (s.trial >= 0 ? 0 : s.relics[i]);
+const equipped = (s: State, i: number) =>
+  s.trial < 0 && s.artifacts.includes(i);
+export function chooseRole(s: State, i: number) {
+  if (s.role !== -1 || !roles[i]) return false;
+  s.role = i;
+  return true;
+}
+export function toggleArtifact(s: State, i: number) {
+  if (!artifacts[i]?.unlocked(s)) return false;
+  if (s.artifacts.includes(i)) {
+    s.artifacts = s.artifacts.filter((x) => x !== i);
+    return true;
+  }
+  if (s.artifacts.length >= 3) return false;
+  s.artifacts.push(i);
+  return true;
+}
 export const production = (s: State) =>
   units.reduce(
     (n, u, i) =>
@@ -482,7 +753,8 @@ export const production = (s: State) =>
       u.rate *
         s.counts[i] *
         (i === 0 && s.upgrades.includes(6) ? 10 : 1) *
-        (i >= 6 && s.upgrades.includes(12) ? 3 : 1),
+        (i >= 6 && i < 12 && s.upgrades.includes(12) ? 3 : 1) *
+        (i >= 12 && s.upgrades.includes(18) ? 5 : 1),
     0,
   ) *
   [
@@ -493,29 +765,54 @@ export const production = (s: State) =>
     [11, 3],
     [15, 4],
     [17, 5],
-  ].reduce((m, [i, b]) => m * (s.upgrades.includes(i) ? b : 1), 1) *
+    [20, 5],
+    [22, 5],
+    [24, 10],
+    [25, 10],
+  ].reduce((n, [i, m]) => n * (s.upgrades.includes(i) ? m : 1), 1) *
   worlds[s.world].multiplier *
-  (1 + s.shards * 0.15) *
-  (1 + s.relics[1] * 0.25) *
-  (s.relics[7] ? 2 : 1);
-export const boostMultiplier = (s: State) => (s.upgrades.includes(14) ? 5 : 3);
+  (s.trial < 0 ? 1 + s.shards * 0.15 : 1) *
+  (1 + rank(s, 1) * 0.25) *
+  (rank(s, 7) ? 2 : 1) *
+  (rank(s, 8)
+    ? 2 ** Math.min(5, Math.floor(s.counts.reduce((a, b) => a + b, 0) / 100))
+    : 1) *
+  (rank(s, 13) ? 25 : 1) *
+  (s.role === 0 ? 2 : 1) *
+  (equipped(s, 0) ? 1.25 : 1) *
+  (equipped(s, 4) ? 3 : 1);
+export const boostMultiplier = (s: State) =>
+  (s.upgrades.includes(14) ? 5 : 3) +
+  (s.upgrades.includes(21) ? 5 : 0) +
+  (rank(s, 10) ? 10 : 0) +
+  (equipped(s, 2) ? 5 : 0);
 export const activeProduction = (s: State, now = Date.now()) =>
   production(s) * (now < s.boostUntil ? boostMultiplier(s) : 1);
 export const clickPower = (s: State) =>
-  ((s.upgrades.includes(0) ? 3 : 1) *
-    (s.upgrades.includes(4) ? 5 : 1) *
-    (s.upgrades.includes(10) ? 10 : 1) *
-    worlds[s.world].multiplier *
-    (1 + s.shards * 0.15) +
-    production(s) *
-      ((s.upgrades.includes(2) ? 0.05 : 0) +
-        (s.upgrades.includes(13) ? 0.1 : 0))) *
-  (1 + s.relics[2]);
+  s.trial === 0
+    ? 0
+    : ((s.upgrades.includes(0) ? 3 : 1) *
+        (s.upgrades.includes(4) ? 5 : 1) *
+        (s.upgrades.includes(10) ? 10 : 1) *
+        worlds[s.world].multiplier *
+        (s.trial < 0 ? 1 + s.shards * 0.15 : 1) +
+        production(s) *
+          ((s.upgrades.includes(2) ? 0.05 : 0) +
+            (s.upgrades.includes(13) ? 0.1 : 0) +
+            (s.upgrades.includes(23) ? 0.25 : 0))) *
+      (1 + rank(s, 2)) *
+      (s.role === 2 ? 5 : 1);
 export const price = (s: State, i: number, qty = 1) =>
   Math.ceil(
     ((units[i].base * 1.15 ** s.counts[i] * (1.15 ** qty - 1)) / 0.15) *
-      (1 - s.relics[3] * 0.1),
+      (1 - rank(s, 3) * 0.1) *
+      (s.role === 0 ? 0.85 : 1) *
+      (equipped(s, 3) ? 0.85 : 1),
   );
+export const worldPrice = (s: State, i: number) =>
+  Math.ceil(worlds[i].cost * (s.role === 1 ? 0.7 : 1));
+export const canBuild = (s: State, i: number) =>
+  s.trial !== 1 || s.counts[i] > 0 || s.counts.filter((n) => n > 0).length < 3;
 export function gain(s: State, n: number) {
   if (Number.isFinite(n) && n > 0 && Number.isFinite(s.lifetime + n)) {
     s.energy += n;
@@ -524,7 +821,14 @@ export function gain(s: State, n: number) {
   }
 }
 export function buy(s: State, i: number, qty: number) {
-  if (!units[i] || !Number.isInteger(qty) || qty < 1 || qty > 100) return false;
+  if (
+    !units[i] ||
+    !Number.isInteger(qty) ||
+    qty < 1 ||
+    qty > 100 ||
+    !canBuild(s, i)
+  )
+    return false;
   const cost = price(s, i, qty);
   if (!Number.isFinite(cost) || s.energy < cost) return false;
   s.energy -= cost;
@@ -532,20 +836,47 @@ export function buy(s: State, i: number, qty: number) {
   recordMilestones(s);
   return true;
 }
+export function learn(s: State, i: number) {
+  const r = research[i];
+  if (!r || s.trial === 2 || s.upgrades.includes(i) || s.energy < r.cost)
+    return false;
+  s.energy -= r.cost;
+  s.upgrades.push(i);
+  recordMilestones(s);
+  return true;
+}
+export function explore(s: State, i: number) {
+  if (!worlds[i] || i !== s.world + 1 || s.energy < worldPrice(s, i))
+    return false;
+  s.energy -= worldPrice(s, i);
+  s.world = i;
+  recordMilestones(s);
+  return true;
+}
 export function harvest(s: State, now = Date.now()) {
+  if (s.trial === 0) return 0;
   const n = clickPower(s) * (now < s.boostUntil ? boostMultiplier(s) : 1);
   gain(s, n);
   s.clicks++;
   s.totalClicks++;
   if (now >= s.boostUntil)
-    s.charge = Math.min(100, s.charge + (s.upgrades.includes(16) ? 4 : 2));
+    s.charge = Math.min(
+      100,
+      s.charge + (s.upgrades.includes(16) ? 4 : 2) * (s.role === 2 ? 2 : 1),
+    );
   return n;
 }
 export function activateBoost(s: State, now = Date.now()) {
   if (s.charge < 100 || s.boostUntil > now) return false;
   s.charge = 0;
   s.boostUntil =
-    now + (20 + (s.upgrades.includes(8) ? 10 : 0) + s.relics[5] * 5) * 1000;
+    now +
+    (20 +
+      (s.upgrades.includes(8) ? 10 : 0) +
+      rank(s, 5) * 5 +
+      (s.role === 2 ? 10 : 0) +
+      (rank(s, 10) ? 30 : 0)) *
+      1000;
   return true;
 }
 export const cometAvailable = (s: State, now = Date.now()) =>
@@ -555,23 +886,87 @@ export function catchComet(s: State, now = Date.now()) {
   const n =
     Math.max(25, production(s) * 30, clickPower(s) * 20) *
     (s.upgrades.includes(9) ? 2 : 1) *
-    (1 + s.relics[4] * 0.5);
+    (s.upgrades.includes(19) ? 5 : 1) *
+    (1 + rank(s, 4) * 0.5) *
+    (s.role === 1 ? 3 : 1) *
+    (equipped(s, 1) ? 2 : 1);
   gain(s, n);
   s.comets++;
   s.charge = Math.min(100, s.charge + 20);
-  s.nextComet = now + 60000;
+  s.nextComet = now + (s.role === 1 ? 40000 : 60000);
   return n;
 }
-// Integrate only the actual boosted interval, including across browser suspension.
+export const worldAbilities = [
+  {
+    name: "Crystal bloom",
+    detail: "Gain 15 seconds of base production and 10 charge.",
+    seconds: 15,
+    charge: 10,
+  },
+  {
+    name: "Vent the core",
+    detail: "Gain 30 seconds of base production.",
+    seconds: 30,
+    charge: 0,
+  },
+  {
+    name: "Nebula pulse",
+    detail: "Gain 40 Overdrive charge.",
+    seconds: 0,
+    charge: 40,
+  },
+  {
+    name: "Celestial flare",
+    detail: "Gain 20 seconds of base production and 20 charge.",
+    seconds: 20,
+    charge: 20,
+  },
+];
+export function worldAbility(s: State, now = Date.now()) {
+  if (now < s.worldReady) return false;
+  const a = worldAbilities[s.world % 4];
+  gain(s, Math.max(a.seconds ? 25 : 0, production(s) * a.seconds));
+  s.charge = Math.min(100, s.charge + a.charge);
+  s.worldReady = now + 90000;
+  return true;
+}
 export function advance(s: State, from: number, to: number) {
   const end = Math.max(from, to),
-    start = Math.max(from, end - 8 * 3600000);
-  const boosted = Math.max(0, Math.min(end, s.boostUntil) - start);
+    start = Math.max(from, end - 8 * 3600000),
+    boosted = Math.max(0, Math.min(end, s.boostUntil) - start);
   const earned =
     (production(s) * (end - start + (boostMultiplier(s) - 1) * boosted)) / 1000;
   gain(s, earned);
   if (end >= s.nextComet + 15000) s.nextComet = end + 45000;
   return earned;
+}
+export const automationUnlocked = (s: State) => s.ascensions >= 1;
+// Foreground automation has a fixed per-tick spending budget, never offline catch-up.
+export function automate(s: State, now = Date.now()) {
+  if (!s.autoEnabled || !automationUnlocked(s) || now < s.nextAuto) return 0;
+  s.nextAuto = now + 1000;
+  let budget = (s.energy * s.autoBudget) / 100,
+    bought = 0;
+  for (let step = 0; step < 10; step++) {
+    const candidates = units
+      .map((u, i) => ({
+        i,
+        cost: price(s, i),
+        score: s.autoPolicy === "cheapest" ? price(s, i) : price(s, i) / u.rate,
+      }))
+      .filter((x) => canBuild(s, x.i) && x.cost <= budget)
+      .sort((a, b) => a.score - b.score);
+    if (!candidates.length) break;
+    const item = candidates[0];
+    if (!buy(s, item.i, 1)) break;
+    budget -= item.cost;
+    bought++;
+  }
+  return bought;
+}
+export function passiveActions(s: State, now = Date.now()) {
+  if (rank(s, 11)) catchComet(s, now);
+  return automate(s, now);
 }
 export const ascensionReward = (s: State) =>
   Math.floor(Math.sqrt(s.earned / 100000));
@@ -582,29 +977,64 @@ export const echoReward = (s: State) =>
         (Math.floor(Math.log10(s.earned / 1e6)) +
           1 +
           Math.max(0, s.world - 2)) *
-          (s.relics[7] ? 1.5 : 1),
+          (rank(s, 7) ? 1.5 : 1) *
+          (rank(s, 13) ? 2 : 1),
       );
-export function ascend(s: State): State {
-  if (ascensionReward(s) < 1) return s;
+function resetRun(s: State) {
   recordMilestones(s);
-  const next = {
+  return {
     ...fresh(),
-    shards: s.shards + ascensionReward(s),
-    echoes: s.echoes + echoReward(s),
+    shards: s.shards,
+    echoes: s.echoes,
     relics: [...s.relics],
     claimed: [...s.claimed],
+    completedTrials: [...s.completedTrials],
+    artifacts: [...s.artifacts],
     bestWorld: s.bestWorld,
     bestResearch: s.bestResearch,
     bestStructures: s.bestStructures,
     totalClicks: s.totalClicks,
     comets: s.comets,
     lifetime: s.lifetime,
-    ascensions: s.ascensions + 1,
+    ascensions: s.ascensions,
     sound: s.sound,
+    autoEnabled: s.autoEnabled,
+    autoPolicy: s.autoPolicy,
+    autoBudget: s.autoBudget,
   };
+}
+export function ascend(s: State): State {
+  if (s.trial >= 0 || ascensionReward(s) < 1) return s;
+  const next = resetRun(s);
+  next.shards += ascensionReward(s);
+  next.echoes += echoReward(s);
+  next.ascensions++;
   next.counts[0] = next.relics[0] * 5;
+  if (next.relics[9]) next.counts[5] = 10;
   if (next.relics[6]) next.upgrades = [0, 1, 2];
+  if (next.relics[12]) next.upgrades = Array.from({ length: 12 }, (_, i) => i);
   recordMilestones(next);
+  return next;
+}
+export function startTrial(s: State, i: number): State {
+  if (!trials[i] || s.ascensions < 1 || s.trial >= 0) return s;
+  const next = resetRun(s);
+  next.trial = i;
+  next.autoEnabled = false;
+  if (i === 0) next.counts[0] = 1;
+  return next;
+}
+export function finishTrial(s: State, abandon = false): State {
+  if (s.trial < 0 || (!abandon && s.earned < trials[s.trial].target)) return s;
+  const next = resetRun(s);
+  if (!abandon && !next.completedTrials.includes(s.trial)) {
+    next.completedTrials.push(s.trial);
+    next.echoes += trials[s.trial].reward;
+  }
+  next.counts[0] = next.relics[0] * 5;
+  if (next.relics[9]) next.counts[5] = 10;
+  if (next.relics[6]) next.upgrades = [0, 1, 2];
+  if (next.relics[12]) next.upgrades = Array.from({ length: 12 }, (_, i) => i);
   return next;
 }
 // Accept the original six-structure save without discarding the player's progress.
@@ -634,7 +1064,7 @@ export function parseSave(value: unknown): State | null {
     new Set(v).size === v.length;
   if (
     !Array.isArray(s.counts) ||
-    ![6, units.length].includes(s.counts.length) ||
+    ![6, 12, units.length].includes(s.counts.length) ||
     !s.counts.every(integer) ||
     !ids(s.upgrades, research.length) ||
     !integer(s.world) ||
@@ -656,16 +1086,54 @@ export function parseSave(value: unknown): State | null {
   if (
     s.relics !== undefined &&
     (!Array.isArray(s.relics) ||
-      s.relics.length !== relics.length ||
+      ![8, relics.length].includes(s.relics.length) ||
       !s.relics.every((n, i) => integer(n) && n <= relics[i].max))
   )
     return null;
   if (s.claimed !== undefined && !ids(s.claimed, challenges.length))
     return null;
+  if (
+    s.role !== undefined &&
+    (!Number.isInteger(s.role) ||
+      Number(s.role) < -1 ||
+      Number(s.role) >= roles.length)
+  )
+    return null;
+  if (
+    s.trial !== undefined &&
+    (!Number.isInteger(s.trial) ||
+      Number(s.trial) < -1 ||
+      Number(s.trial) >= trials.length)
+  )
+    return null;
+  if (s.completedTrials !== undefined && !ids(s.completedTrials, trials.length))
+    return null;
+  if (
+    s.artifacts !== undefined &&
+    (!ids(s.artifacts, artifacts.length) ||
+      (s.artifacts as number[]).length > 3)
+  )
+    return null;
+  if (
+    s.autoPolicy !== undefined &&
+    !["efficient", "cheapest"].includes(String(s.autoPolicy))
+  )
+    return null;
+  if (
+    s.autoBudget !== undefined &&
+    ![10, 25, 50].includes(Number(s.autoBudget))
+  )
+    return null;
+  for (const k of ["worldReady", "nextAuto"])
+    if (s[k] !== undefined && !integer(s[k])) return null;
   const result = {
     ...fresh(),
     ...s,
     counts: [...s.counts, ...Array(units.length - s.counts.length).fill(0)],
+    relics: Array.from({ length: relics.length }, (_, i) =>
+      Array.isArray(s.relics) ? (s.relics[i] ?? 0) : 0,
+    ),
+    autoEnabled: s.autoEnabled === true,
     upgrades: [...(s.upgrades as number[])],
     sound: s.sound === true,
   } as State;
@@ -702,7 +1170,8 @@ export function save(s: State) {
 export function format(n: number) {
   if (n < 1000)
     return n.toLocaleString("en-US", { maximumFractionDigits: n < 10 ? 1 : 0 });
-  const suffix = ["K", "M", "B", "T", "Qa", "Qi"];
+  if (n >= 1e24) return n.toExponential(2);
+  const suffix = ["K", "M", "B", "T", "Qa", "Qi", "Sx"];
   let i = -1;
   while (n >= 1000 && i < suffix.length - 1) {
     n /= 1000;
