@@ -3,6 +3,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { createOrbitalBase } from "./orbital-base";
 export function createScene(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -167,26 +168,8 @@ export function createScene(canvas: HTMLCanvasElement) {
     }),
   );
   scene.add(stars);
-  const colony = new THREE.Group();
-  scene.add(colony);
-  const moduleGeometry = new THREE.OctahedronGeometry(0.11);
-  const moduleMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb5ebdf,
-    metalness: 0.7,
-    roughness: 0.25,
-    emissive: 0x22574e,
-  });
-  for (let i = 0; i < 16; i++) {
-    const module = new THREE.Mesh(moduleGeometry, moduleMaterial);
-    const angle = (i / 16) * Math.PI * 2;
-    module.position.set(
-      Math.cos(angle) * 2.8,
-      -0.1 + Math.sin(angle * 3) * 0.25,
-      Math.sin(angle) * 2.8,
-    );
-    module.visible = false;
-    colony.add(module);
-  }
+  const station = createOrbitalBase();
+  scene.add(station.group);
   const shockMaterial = new THREE.MeshBasicMaterial({
     color: 0xb2ffe1,
     transparent: true,
@@ -253,10 +236,7 @@ export function createScene(canvas: HTMLCanvasElement) {
     world.rotation.x += (pointerY * 0.09 - world.rotation.x) * 0.03;
     scene.rotation.y += (pointerX * 0.08 - scene.rotation.y) * 0.03;
     drones.rotation.y = reduced ? 0 : t * (overdrive ? 0.65 : 0.2);
-    colony.rotation.y = reduced ? 0 : -t * 0.07;
-    colony.children.forEach((module, i) => {
-      module.rotation.y = reduced ? 0 : t * 0.4 + i;
-    });
+    station.animate(t, reduced);
     comet.position.set(
       reduced ? 2 : Math.sin(t * 0.65) * 3.2,
       2.1 + (reduced ? 0 : Math.cos(t * 0.65) * 0.4),
@@ -275,12 +255,14 @@ export function createScene(canvas: HTMLCanvasElement) {
   }
   animate();
   return {
-    setActivity(count: number, boosted: boolean, cometVisible: boolean) {
+    setActivity(counts: number[], boosted: boolean, cometVisible: boolean) {
       overdrive = boosted;
       comet.visible = cometVisible;
-      colony.children.forEach((module, i) => {
-        module.visible = count > i * 25;
-      });
+      station.setCounts(counts);
+    },
+    setTheme(color: number) {
+      station.setTheme(color);
+      key.color.setHex(color);
     },
     burst() {
       burstStrength = 1;
@@ -292,7 +274,7 @@ export function createScene(canvas: HTMLCanvasElement) {
     setWorld(color: number, index = 0) {
       burstStrength = 1;
       shockMaterial.color.setHex(color);
-      moduleMaterial.emissive.setHex(color).multiplyScalar(0.2);
+
       rockMat.color.setHex(color).multiplyScalar(0.19);
       surface.material.color.setHex(color).multiplyScalar(0.4);
       orbit.rotation.z = -0.18 + index * 0.13;

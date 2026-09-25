@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  challenges,
+  buyAll,
+  claimSector,
+  sectors,
+  worldFactor,
+  abilityAvailable,
   fresh,
   gain,
   buy,
@@ -344,11 +350,13 @@ test("artifact slots enforce unlocks and the three-slot cap", () => {
 });
 test("world ability cooldown carries across world purchases", () => {
   const s = fresh();
+  s.worldMeter = 100;
   assert.ok(worldAbility(s, 1000));
   assert.equal(worldAbility(s, 1001), false);
   s.energy = 1e8;
   explore(s, 1);
   assert.equal(worldAbility(s, 2000), false);
+  s.worldMeter = 100;
   assert.ok(worldAbility(s, 91000));
 });
 test("cosmic magnet catches only once and is suspended in trials", () => {
@@ -369,4 +377,75 @@ test("invalid expedition settings are rejected by save parser", () => {
   assert.equal(parseSave({ ...fresh(), trial: 3 }), null);
   assert.equal(parseSave({ ...fresh(), artifacts: [0, 1, 2, 3] }), null);
   assert.equal(parseSave({ ...fresh(), autoBudget: 100 }), null);
+});
+
+test("buy all buys one selected batch per affordable type and honors trials", () => {
+  const s = fresh();
+  s.energy = price(s, 0, 100);
+  assert.equal(buyAll(s, "structures", 100), 100);
+  assert.equal(s.counts[0], 100);
+  assert.equal(s.energy, 0);
+  s.energy = 1e30;
+  s.trial = 1;
+  buyAll(s, "structures");
+  assert.equal(s.counts.filter((n) => n > 0).length, 3);
+  s.trial = 2;
+  assert.equal(buyAll(s, "research"), 0);
+});
+test("sector rewards are one-time and themes survive resets", () => {
+  const s = fresh();
+  s.bestWorld = 11;
+  s.claimed = challenges.map((_, i) => i);
+  s.theme = "nebula";
+  assert.ok(claimSector(s, 0));
+  assert.equal(claimSector(s, 0), false);
+  assert.equal(buyAll(s, "legacy"), 3);
+  assert.equal(
+    s.echoes,
+    sectors.reduce((n, sector) => n + sector.reward, 0),
+  );
+  s.earned = 1e6;
+  const next = ascend(s);
+  assert.equal(next.theme, "nebula");
+  assert.deepEqual(next.sectorClaims, [0, 1, 2, 3]);
+  assert.equal(parseSave({ ...next, worldMeter: 101 }), null);
+  assert.equal(parseSave({ ...next, theme: "invalid" }), null);
+});
+test("world mechanics consume resources and enforce sacrifice and seeding limits", () => {
+  const s = fresh();
+  assert.equal(abilityAvailable(s, 1000), false);
+  for (let i = 0; i < 5; i++) harvest(s, 1000);
+  assert.equal(s.worldMeter, 10);
+  assert.ok(worldAbility(s, 1000));
+  assert.equal(s.worldMeter, 0);
+  s.world = 6;
+  s.worldReady = 0;
+  assert.equal(worldAbility(s, 1000), false);
+  s.counts[0] = 2;
+  assert.ok(worldAbility(s, 1000));
+  assert.equal(s.counts[0], 1);
+  assert.equal(worldFactor(s), 1.25);
+  s.world = 7;
+  s.worldReady = 0;
+  s.worldStacks = 0;
+  s.energy = 1000;
+  assert.ok(worldAbility(s, 1000));
+  assert.equal(s.energy, 900);
+  assert.equal(worldFactor(s), 1.5);
+  s.worldStacks = 10;
+  assert.equal(abilityAvailable(s, 1e9), false);
+});
+test("silence income integrates equally across offline and foreground intervals", () => {
+  const a = fresh();
+  a.world = 10;
+  a.counts[0] = 1;
+  a.worldMeter = 70;
+  a.boostUntil = 15000;
+  const b = structuredClone(a);
+  advance(a, 0, 60000);
+  for (let t = 0; t < 60000; t += 1000) advance(b, t, t + 1000);
+  assert.ok(Math.abs(a.energy - b.energy) < 1e-6);
+  assert.equal(a.worldMeter, 100);
+  harvest(a);
+  assert.equal(a.worldMeter, 0);
 });

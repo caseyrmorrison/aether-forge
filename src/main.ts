@@ -1,5 +1,11 @@
 import "./style.css";
 import {
+  themes,
+  sectors,
+  sectorIndex,
+  claimSector,
+  buyAll,
+  abilityAvailable,
   roles,
   trials,
   chooseRole,
@@ -52,9 +58,9 @@ const offline = advance(state, state.savedAt, Date.now());
 const $ = <T extends HTMLElement = HTMLElement>(s: string) =>
   document.querySelector<T>(s)!;
 $("#app").innerHTML = `
-<header class="topbar"><a class="brand" href="./" aria-label="Aether Forge home"><span class="brand-icon">✧</span><span>AETHER<span class="brand-light">FORGE</span><small>AN IDLE ODYSSEY</small></span></a><div class="sector"><span class="live-dot"></span> SOLO EXPEDITION <span class="divider">/</span> SECTOR 001</div><div class="top-actions"><span id="save-status">✓ Progress saved</span><button id="sound" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♫</button><button id="settings" class="icon-button" aria-label="Settings" title="Settings">⚙</button></div></header>
-<main><section class="world-panel"><div class="world-top"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><span class="world-badge">◈ <span id="world-number">WORLD 01</span></span></div><div class="world-heading"><h1 id="world-name"></h1><p id="world-description"></p></div><div class="scene-container"><div class="scene-halo"></div><canvas id="world-canvas" tabindex="0" role="button" aria-label="Harvest aether from the crystal. Press Enter or Space."></canvas><div class="scene-caption"><span class="live-dot"></span> <span id="world-type"></span><span class="coordinates">07.24° N &nbsp; 38.91° E</span></div><div class="floating-label"><span>✧</span> <span>CORE STATUS<small>Resonating</small></span></div><div id="particles"></div></div><div class="harvest-area"><span class="eyebrow">A SMALL TOUCH. AN INFINITE POSSIBILITY.</span><button id="harvest"><span>✧</span> Harvest aether <span id="click-value">+1</span></button><div class="harvest-hint">Click the crystal or press <kbd>Space</kbd> to harvest</div></div><div class="active-systems"><button id="overdrive" class="ability-button"><span>⚡ Core overdrive</span><small id="boost-status"></small><div class="progress-track"><div id="charge-progress"></div></div></button><button id="comet" class="ability-button comet-button"><span>✦ Comet scanner</span><small id="comet-status"></small></button></div><button id="world-ability" class="ability-button world-ability"><span id="ability-name"></span><small id="ability-status"></small></button><div id="run-banner" class="run-banner"></div><div class="journey-card"><div class="journey-icon">⌁</div><div class="journey-content"><div class="journey-title"><span id="goal-title"></span><span id="goal-percent"></span></div><div class="progress-track"><div id="goal-progress"></div></div><p id="goal-description"></p></div><span class="journey-arrow">↗</span></div><footer class="world-footer"><span>✦ &nbsp; THE UNIVERSE STARTS WITH YOU.</span><span>v3.0 <span class="live-dot"></span></span></footer></section>
-<section class="control-panel"><div class="resource-card"><div class="resource-label"><span>✧ &nbsp; AETHER RESERVE</span><span class="pill">LIVE</span></div><div class="energy-number" id="energy">0</div><div class="resource-bottom"><span><i class="live-dot"></i><strong id="rate">0</strong> / second</span><span id="multiplier">1× world bonus</span></div><svg class="sparkline" viewBox="0 0 500 45" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#8de0b7" stop-opacity=".12"/><stop offset="1" stop-color="#8de0b7" stop-opacity="0"/></linearGradient></defs><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0V45H0Z" fill="url(#fade)"/><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0" fill="none" stroke="#7aba9b" stroke-opacity=".4" stroke-width="1.4"/></svg></div><nav class="tabs" aria-label="Upgrade categories"><button data-tab="structures" class="active">Structures <span>${units.length}</span></button><button data-tab="research">Research <span id="research-count">0/${research.length}</span></button><button data-tab="worlds">Worlds <span>${worlds.length}</span></button><button data-tab="legacy">Legacy <span id="legacy-ready">∞</span></button><button data-tab="expedition">Expedition <span>✦</span></button></nav><div class="legacy-wallet"><span>◈ <strong id="echoes">0</strong> Echoes <small>Permanent currency</small></span><span id="legacy-power"></span></div><div class="section-heading"><div><h2 id="section-title">Build your constellation</h2><p id="section-description">Little by little, extraordinary things happen.</p></div><div class="quantity" aria-label="Purchase quantity"><button data-qty="1" class="active">×1</button><button data-qty="10">×10</button><button data-qty="100">×100</button></div></div><div id="items"></div><div class="ascend-card"><span class="ascend-icon">✺</span><div><h3>A new beginning awaits</h3><p id="ascend-description">Reach 100K aether to unlock Ascension.</p></div><button id="ascend" aria-label="Ascend">↗</button></div><div class="stats-strip"><span><strong id="total-structures">0</strong> structures built</span><span><strong id="total-earned">0</strong> lifetime aether</span></div></section></main><div id="toast" role="status"></div><dialog id="dialog"><div id="dialog-content"></div><button id="close-dialog" class="dialog-close" aria-label="Close dialog">×</button></dialog>`;
+<header class="topbar"><a class="brand" href="./" aria-label="Aether Forge home"><span class="brand-icon">✧</span><span>AETHER<span class="brand-light">FORGE</span><small>AN IDLE ODYSSEY</small></span></a><div class="sector"><span class="live-dot"></span> SOLO EXPEDITION <span class="divider">/</span> <span id="sector-name">THE CRADLE</span></div><div class="top-actions"><span id="save-status">✓ Progress saved</span><button id="sound" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♫</button><button id="settings" class="icon-button" aria-label="Settings" title="Settings">⚙</button></div></header>
+<main><section class="world-panel"><div class="world-top"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><span class="world-badge">◈ <span id="world-number">WORLD 01</span></span></div><div class="world-heading"><h1 id="world-name"></h1><p id="world-description"></p></div><div class="scene-container"><div class="scene-halo"></div><canvas id="world-canvas" tabindex="0" role="button" aria-label="Harvest aether from the crystal. Press Enter or Space."></canvas><div class="scene-caption"><span class="live-dot"></span> <span id="world-type"></span><span class="coordinates">07.24° N &nbsp; 38.91° E</span></div><div class="floating-label"><span>✧</span> <span>CORE STATUS<small>Resonating</small></span></div><div id="particles"></div></div><div id="base-status" class="base-status"></div><div class="harvest-area"><span class="eyebrow">A SMALL TOUCH. AN INFINITE POSSIBILITY.</span><button id="harvest"><span>✧</span> Harvest aether <span id="click-value">+1</span></button><div class="harvest-hint">Click the crystal or press <kbd>Space</kbd> to harvest</div></div><div class="active-systems"><button id="overdrive" class="ability-button"><span>⚡ Core overdrive</span><small id="boost-status"></small><div class="progress-track"><div id="charge-progress"></div></div></button><button id="comet" class="ability-button comet-button"><span>✦ Comet scanner</span><small id="comet-status"></small></button></div><button id="world-ability" class="ability-button world-ability"><span id="ability-name"></span><small id="ability-status"></small></button><div class="mechanic-panel"><p id="mechanic-detail"></p><strong id="mechanic-value"></strong></div><div id="run-banner" class="run-banner"></div><div class="journey-card"><div class="journey-icon">⌁</div><div class="journey-content"><div class="journey-title"><span id="goal-title"></span><span id="goal-percent"></span></div><div class="progress-track"><div id="goal-progress"></div></div><p id="goal-description"></p></div><span class="journey-arrow">↗</span></div><footer class="world-footer"><span>✦ &nbsp; THE UNIVERSE STARTS WITH YOU.</span><span>v4.0 <span class="live-dot"></span></span></footer></section>
+<section class="control-panel"><div class="resource-card"><div class="resource-label"><span>✧ &nbsp; AETHER RESERVE</span><span class="pill">LIVE</span></div><div class="energy-number" id="energy">0</div><div class="resource-bottom"><span><i class="live-dot"></i><strong id="rate">0</strong> / second</span><span id="multiplier">1× world bonus</span></div><svg class="sparkline" viewBox="0 0 500 45" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#8de0b7" stop-opacity=".12"/><stop offset="1" stop-color="#8de0b7" stop-opacity="0"/></linearGradient></defs><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0V45H0Z" fill="url(#fade)"/><path d="M0 40L40 37L70 40L105 31L145 34L180 23L210 27L245 18L270 24L300 13L340 18L370 8L410 12L450 3L480 8L500 0" fill="none" stroke="#7aba9b" stroke-opacity=".4" stroke-width="1.4"/></svg></div><nav class="tabs" aria-label="Upgrade categories"><button data-tab="structures" class="active">Structures <span>${units.length}</span></button><button data-tab="research">Research <span id="research-count">0/${research.length}</span></button><button data-tab="worlds">Worlds <span>${worlds.length}</span></button><button data-tab="legacy">Legacy <span id="legacy-ready">∞</span></button><button data-tab="expedition">Expedition <span>✦</span></button></nav><div class="legacy-wallet"><span>◈ <strong id="echoes">0</strong> Echoes <small>Permanent currency</small></span><span id="legacy-power"></span></div><div class="section-heading"><div><h2 id="section-title">Build your constellation</h2><p id="section-description">Little by little, extraordinary things happen.</p></div><div class="quantity" aria-label="Purchase quantity"><button data-qty="1" class="active">×1</button><button data-qty="10">×10</button><button data-qty="100">×100</button></div></div><div id="bulk-controls"><button id="buy-all" class="ability-button"></button><small id="bulk-hint"></small></div><div id="items"></div><div class="ascend-card"><span class="ascend-icon">✺</span><div><h3>A new beginning awaits</h3><p id="ascend-description">Reach 100K aether to unlock Ascension.</p></div><button id="ascend" aria-label="Ascend">↗</button></div><div class="stats-strip"><span><strong id="total-structures">0</strong> structures built</span><span><strong id="total-earned">0</strong> lifetime aether</span></div></section></main><div id="toast" role="status"></div><dialog id="dialog"><div id="dialog-content"></div><button id="close-dialog" class="dialog-close" aria-label="Close dialog">×</button></dialog>`;
 let toastTimer: ReturnType<typeof setTimeout>;
 let scene: ReturnType<typeof createScene> | undefined;
 try {
@@ -153,6 +159,17 @@ function renderItems(resetScroll = false) {
           : tab === "expedition"
             ? "Specialize, automate, and take on a different kind of run."
             : "Each new world multiplies all your production.";
+  $("#bulk-controls").hidden = !["structures", "research", "legacy"].includes(
+    tab,
+  );
+  $("#buy-all").textContent =
+    tab === "legacy" ? "Claim all rewards" : "Buy all affordable";
+  $("#bulk-hint").textContent =
+    tab === "structures"
+      ? `One ×${quantity} batch per type, in list order.`
+      : tab === "research"
+        ? "Learn each affordable discovery in list order."
+        : "Collect eligible challenges and sector rewards. Relics remain your choice.";
   if (tab === "structures")
     list.innerHTML = units
       .map(
@@ -171,7 +188,7 @@ function renderItems(resetScroll = false) {
     list.innerHTML = worlds
       .map(
         (w, i) =>
-          `<button class="item world-item" data-world="${i}"><span class="item-icon icon-${i % 6}">◎</span><span class="item-content"><span class="item-title">${w.name}</span><span class="item-description">${w.type.toLowerCase()}</span><span class="item-rate">${w.multiplier}× all production & harvests</span></span><span class="item-price">${i === state.world ? "● Exploring" : i < state.world ? "✓ Discovered" : "✧ " + format(worldPrice(state, i))}</span></button>`,
+          `${i % 3 === 0 ? `<div class="sector-card"><span class="eyebrow">SECTOR ${Math.floor(i / 3) + 1}</span><h3>${sectors[Math.floor(i / 3)].name}</h3><p>${sectors[Math.floor(i / 3)].bonus}</p><button class="ability-button" data-sector="${Math.floor(i / 3)}"></button></div>` : ""}<button class="item world-item" data-world="${i}"><span class="item-icon icon-${i % 6}">◎</span><span class="item-content"><span class="item-title">${w.name}</span><span class="item-description">${w.type.toLowerCase()}</span><span class="item-rate">${w.multiplier}× all production & harvests</span></span><span class="item-price">${i === state.world ? "● Exploring" : i < state.world ? "✓ Discovered" : "✧ " + format(worldPrice(state, i))}</span></button>`,
       )
       .join("");
   if (tab === "legacy")
@@ -197,6 +214,14 @@ function renderItems(resetScroll = false) {
 $("#items").addEventListener("click", (e) => {
   const button = (e.target as HTMLElement).closest<HTMLButtonElement>("button");
   if (!button) return;
+  if (
+    button.dataset.sector !== undefined &&
+    claimSector(state, Number(button.dataset.sector))
+  ) {
+    toast("Sector milestone claimed. Echoes secured.");
+    persist();
+    update();
+  }
   if (button.dataset.buy !== undefined) {
     const i = Number(button.dataset.buy);
     if (buy(state, i, quantity)) {
@@ -289,6 +314,8 @@ document.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) =>
 document.querySelectorAll<HTMLButtonElement>("[data-qty]").forEach((b) =>
   b.addEventListener("click", () => {
     quantity = Number(b.dataset.qty);
+    $("#bulk-hint").textContent =
+      `One ×${quantity} batch per type, in list order.`;
     document
       .querySelectorAll("[data-qty]")
       .forEach((x) => x.classList.toggle("active", x === b));
@@ -351,13 +378,48 @@ function update() {
     boosting = now < state.boostUntil;
   $<HTMLButtonElement>("#harvest").disabled = state.trial === 0;
   $("#world-canvas").setAttribute("aria-disabled", String(state.trial === 0));
-  const ability = worldAbilities[state.world % 4];
+  const ability = worldAbilities[state.world];
   $("#ability-name").textContent = "✺ " + ability.name;
   $("#ability-status").textContent =
     now < state.worldReady
       ? `Recharging · ${Math.ceil((state.worldReady - now) / 1000)}s`
-      : ability.detail;
-  $<HTMLButtonElement>("#world-ability").disabled = now < state.worldReady;
+      : abilityAvailable(state, now)
+        ? "Activate · 90s cooldown"
+        : state.worldStacks >= 10 && [6, 7].includes(state.world)
+          ? "Maximum stacks reached"
+          : state.world === 6
+            ? "Requires a structure to sacrifice"
+            : state.world === 7
+              ? "Requires 1,000 aether in reserve"
+              : "Build your world resource to activate";
+  $<HTMLButtonElement>("#world-ability").disabled = !abilityAvailable(
+    state,
+    now,
+  );
+  $("#mechanic-detail").textContent = ability.detail;
+  $("#mechanic-value").textContent = [6, 7].includes(state.world)
+    ? `${ability.meter}: ${state.worldStacks} / 10 · resets on travel`
+    : state.world === 9
+      ? `Next harvest: ${state.clicks % 2 ? "2× mirrored" : "normal"}`
+      : [3, 11].includes(state.world)
+        ? `${state.counts.filter((n) => n > 0).length} distinct structure types online`
+        : `${ability.meter}: ${Math.floor(state.worldMeter)} / 100 · needs 10 to activate`;
+  $("#sector-name").textContent =
+    sectors[sectorIndex(state)].name.toUpperCase();
+  const total = state.counts.reduce((a, b) => a + b, 0);
+  $("#base-status").textContent =
+    `${total >= 500 ? "Orbital metropolis" : total >= 100 ? "Orbital city" : total > 0 ? "Orbital outpost" : "Your orbital base awaits"} · ${state.counts.filter((n) => n > 0).length} / 16 docks · ${format(total)} structures`;
+  if (tab === "worlds")
+    sectors.forEach((sector, i) => {
+      const button = $<HTMLButtonElement>(`[data-sector="${i}"]`);
+      button.disabled =
+        state.sectorClaims.includes(i) || state.bestWorld < sector.end;
+      button.textContent = state.sectorClaims.includes(i)
+        ? "✓ Sector reward claimed"
+        : state.bestWorld >= sector.end
+          ? `Claim ${sector.reward} Echoes`
+          : `Reach world ${sector.end + 1} · ${sector.reward} Echoes`;
+    });
   $("#run-banner").textContent =
     (state.role >= 0
       ? roles[state.role].name
@@ -365,11 +427,7 @@ function update() {
     (state.trial >= 0
       ? " · TRIAL: " + trials[state.trial].name
       : " · Normal expedition");
-  scene?.setActivity(
-    state.counts.reduce((a, b) => a + b, 0),
-    boosting,
-    cometAvailable(state),
-  );
+  scene?.setActivity(state.counts, boosting, cometAvailable(state));
   if (tab === "expedition" && state.trial >= 0) {
     $(`#trial-progress-${state.trial}`).textContent =
       format(state.earned) + " / " + format(trials[state.trial].target);
@@ -538,8 +596,13 @@ $("#ascend").addEventListener("click", () => {
 });
 $("#settings").addEventListener("click", () => {
   $("#dialog-content").innerHTML =
-    `<span class="eyebrow">EXPEDITION SETTINGS</span><h2>Make yourself at home.</h2><p>Your progress saves automatically on this device. Your structures keep producing for up to 8 hours while you’re away.</p><div class="settings-stat"><span>Manual harvests</span><strong>${format(state.clicks)}</strong></div><div class="settings-stat"><span>Ascensions</span><strong>${state.ascensions}</strong></div><button id="export" class="primary">Export save backup ↓</button><label class="import-label">Import save backup ↑<input id="import" type="file" accept="application/json,.json"/></label><p class="small-print">Single player. No accounts, ads, or purchases. Just you and a universe of possibility.</p>`;
+    `<span class="eyebrow">EXPEDITION SETTINGS</span><h2>Make yourself at home.</h2><p>Your progress saves automatically on this device. Your structures keep producing for up to 8 hours while you’re away.</p><div class="settings-stat"><span>Manual harvests</span><strong>${format(state.clicks)}</strong></div><div class="settings-stat"><span>Ascensions</span><strong>${state.ascensions}</strong></div><label class="theme-label">Visual theme<select id="theme">${themes.map((t) => `<option value="${t.id}" ${state.theme === t.id ? "selected" : ""}>${t.name}</option>`).join("")}</select></label><button id="export" class="primary">Export save backup ↓</button><label class="import-label">Import save backup ↑<input id="import" type="file" accept="application/json,.json"/></label><p class="small-print">Single player. No accounts, ads, or purchases. Just you and a universe of possibility.</p>`;
   dialog.showModal();
+  $("#theme").addEventListener("change", (e) => {
+    state.theme = (e.target as HTMLSelectElement).value;
+    applyTheme();
+    persist();
+  });
   $("#export").addEventListener("click", () => {
     persist();
     const url = URL.createObjectURL(
@@ -559,6 +622,7 @@ $("#settings").addEventListener("click", () => {
       const imported = parseSave(data);
       if (!imported) throw Error();
       state = imported;
+      applyTheme();
       state.savedAt = Date.now();
       previous = Date.now();
       scene?.setWorld(worlds[state.world].color, state.world);
@@ -635,7 +699,25 @@ function confirmRunReset(
     if (next !== state) replaceRun(next);
   });
 }
+function applyTheme() {
+  const theme = themes.find((t) => t.id === state.theme) || themes[0];
+  document.documentElement.dataset.theme = theme.id;
+  scene?.setTheme(theme.color);
+}
+$("#buy-all").addEventListener("click", () => {
+  if (tab !== "structures" && tab !== "research" && tab !== "legacy") return;
+  const count = buyAll(state, tab, quantity);
+  toast(
+    count
+      ? `${count} ${tab === "legacy" ? "rewards claimed" : tab === "research" ? "discoveries learned" : "structures built"}.`
+      : "Nothing affordable or ready yet.",
+  );
+  if (count) scene?.burst();
+  update();
+  persist();
+});
 scene?.setWorld(worlds[state.world].color, state.world);
+applyTheme();
 renderItems();
 let previous = Date.now();
 setInterval(() => {

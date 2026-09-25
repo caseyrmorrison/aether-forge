@@ -401,6 +401,10 @@ export type State = {
   autoBudget: number;
   nextAuto: number;
   worldReady: number;
+  theme: string;
+  worldMeter: number;
+  worldStacks: number;
+  sectorClaims: number[];
 };
 export const relics = [
   {
@@ -526,6 +530,10 @@ export const fresh = (): State => ({
   autoBudget: 25,
   nextAuto: 0,
   worldReady: 0,
+  theme: "aurora",
+  worldMeter: 0,
+  worldStacks: 0,
+  sectorClaims: [],
   energy: 0,
   earned: 0,
   lifetime: 0,
@@ -780,7 +788,9 @@ export const production = (s: State) =>
   (rank(s, 13) ? 25 : 1) *
   (s.role === 0 ? 2 : 1) *
   (equipped(s, 0) ? 1.25 : 1) *
-  (equipped(s, 4) ? 3 : 1);
+  (equipped(s, 4) ? 3 : 1) *
+  worldFactor(s) *
+  (sectorIndex(s) === 1 ? 1.25 : 1);
 export const boostMultiplier = (s: State) =>
   (s.upgrades.includes(14) ? 5 : 3) +
   (s.upgrades.includes(21) ? 5 : 0) +
@@ -801,7 +811,10 @@ export const clickPower = (s: State) =>
             (s.upgrades.includes(13) ? 0.1 : 0) +
             (s.upgrades.includes(23) ? 0.25 : 0))) *
       (1 + rank(s, 2)) *
-      (s.role === 2 ? 5 : 1);
+      (s.role === 2 ? 5 : 1) *
+      (sectorIndex(s) === 2 ? 1.5 : 1) *
+      (s.world === 1 && s.worldMeter >= 80 ? 0.5 : 1) *
+      (s.world === 9 && s.clicks % 2 === 1 ? 2 : 1);
 export const price = (s: State, i: number, qty = 1) =>
   Math.ceil(
     ((units[i].base * 1.15 ** s.counts[i] * (1.15 ** qty - 1)) / 0.15) *
@@ -850,6 +863,8 @@ export function explore(s: State, i: number) {
     return false;
   s.energy -= worldPrice(s, i);
   s.world = i;
+  s.worldMeter = 0;
+  s.worldStacks = 0;
   recordMilestones(s);
   return true;
 }
@@ -859,6 +874,9 @@ export function harvest(s: State, now = Date.now()) {
   gain(s, n);
   s.clicks++;
   s.totalClicks++;
+  if (s.world === 0 || s.world === 1)
+    s.worldMeter = Math.min(100, s.worldMeter + (s.world === 0 ? 2 : 5));
+  if (s.world === 10) s.worldMeter = 0;
   if (now >= s.boostUntil)
     s.charge = Math.min(
       100,
@@ -892,50 +910,269 @@ export function catchComet(s: State, now = Date.now()) {
     (equipped(s, 1) ? 2 : 1);
   gain(s, n);
   s.comets++;
+  if (s.world === 2) s.worldMeter = Math.min(100, s.worldMeter + 25);
   s.charge = Math.min(100, s.charge + 20);
   s.nextComet = now + (s.role === 1 ? 40000 : 60000);
   return n;
 }
+export const themes = [
+  { id: "aurora", name: "Aurora", color: 0x8ce7be },
+  { id: "nebula", name: "Nebula", color: 0xc39aff },
+  { id: "solar", name: "Solar dusk", color: 0xffbd75 },
+  { id: "midnight", name: "Deep space", color: 0x78baff },
+];
+export const sectors = [
+  {
+    name: "The Cradle",
+    detail: "Worlds 1–3 · Learn the rhythm of living worlds.",
+    bonus: "Your first frontier",
+    end: 2,
+    reward: 5,
+  },
+  {
+    name: "The Radiant Sea",
+    detail: "Worlds 4–6 · Build a civilization in the light.",
+    bonus: "+25% structure production here",
+    end: 5,
+    reward: 15,
+  },
+  {
+    name: "The Fracture",
+    detail: "Worlds 7–9 · Turn instability into opportunity.",
+    bonus: "+50% manual harvest power here",
+    end: 8,
+    reward: 35,
+  },
+  {
+    name: "The Infinite",
+    detail: "Worlds 10–12 · Master creation itself.",
+    bonus: "+5 Echoes on eligible ascensions here",
+    end: 11,
+    reward: 75,
+  },
+];
+export const sectorIndex = (s: State) => Math.floor(s.world / 3);
+export function claimSector(s: State, i: number) {
+  const sector = sectors[i];
+  if (!sector || s.sectorClaims.includes(i) || s.bestWorld < sector.end)
+    return false;
+  s.sectorClaims.push(i);
+  s.echoes += sector.reward;
+  return true;
+}
+export function worldFactor(s: State) {
+  const diversity = s.counts.filter((n) => n > 0).length;
+  switch (s.world) {
+    case 0:
+      return 1 + s.worldMeter / 100;
+    case 1:
+      return 1 + s.worldMeter / 50;
+    case 3:
+      return 1 + diversity * 0.05;
+    case 6:
+      return 1 + s.worldStacks * 0.25;
+    case 7:
+      return 1 + s.worldStacks * 0.5;
+    case 10:
+      return 1 + s.worldMeter / 100;
+    case 11:
+      return 1 + diversity * 0.15;
+    default:
+      return 1;
+  }
+}
 export const worldAbilities = [
   {
     name: "Crystal bloom",
-    detail: "Gain 15 seconds of base production and 10 charge.",
-    seconds: 15,
-    charge: 10,
+    detail:
+      "Harvest to grow a living lattice: up to 2× production. Bloom spends all growth for up to 60 seconds of production.",
+    meter: "Lattice growth",
   },
   {
     name: "Vent the core",
-    detail: "Gain 30 seconds of base production.",
-    seconds: 30,
-    charge: 0,
+    detail:
+      "Harvest builds heat: up to 3× production, but harvest power halves at 80 heat. Vent spends heat for up to 90 seconds of production.",
+    meter: "Core heat",
   },
   {
-    name: "Nebula pulse",
-    detail: "Gain 40 Overdrive charge.",
-    seconds: 0,
-    charge: 40,
+    name: "Nebula transmutation",
+    detail:
+      "Each comet stores 25 nebula essence. Transmute essence into Overdrive charge and aether.",
+    meter: "Nebula essence",
   },
   {
-    name: "Celestial flare",
-    detail: "Gain 20 seconds of base production and 20 charge.",
-    seconds: 20,
-    charge: 20,
+    name: "Constellation alignment",
+    detail:
+      "Each distinct structure type adds 5% production. Align for 5 seconds of production per type.",
+    meter: "Structure diversity",
+  },
+  {
+    name: "Harvest the tide",
+    detail:
+      "Tidal reserves fill over 100 seconds, even offline. Release a full tide for 100 seconds of production.",
+    meter: "Tidal reserve",
+  },
+  {
+    name: "Solar ignition",
+    detail:
+      "Sunlight fills over 50 seconds. Spend a full battery to fill Overdrive instantly.",
+    meter: "Solar battery",
+  },
+  {
+    name: "Feed the singularity",
+    detail:
+      "Sacrifice one of your lowest-tier owned structures for +25% production on this world, up to 10 stacks.",
+    meter: "Singularity stacks",
+  },
+  {
+    name: "Seed a universe",
+    detail:
+      "Spend 10% of your reserve (minimum 100) for +50% production on this world, up to 10 seeds.",
+    meter: "Universe seeds",
+  },
+  {
+    name: "Release borrowed time",
+    detail:
+      "Store time over 200 seconds, even offline. Release a full bank for 180 seconds of production.",
+    meter: "Stored time",
+  },
+  {
+    name: "Mirror cascade",
+    detail:
+      "Every second manual harvest is doubled. Cascade grants 30 seconds of production and 30 Overdrive charge.",
+    meter: "Mirror rhythm",
+  },
+  {
+    name: "Break the silence",
+    detail:
+      "Silence grows over 100 seconds for up to 2× production. Harvesting breaks it. Release silence for a burst of up to 120 seconds.",
+    meter: "Silence",
+  },
+  {
+    name: "Omniverse convergence",
+    detail:
+      "Each distinct structure type adds 15% production. Converge for 10 seconds of production per type and full Overdrive charge.",
+    meter: "Structure diversity",
   },
 ];
-export function worldAbility(s: State, now = Date.now()) {
+export function abilityAvailable(s: State, now = Date.now()) {
   if (now < s.worldReady) return false;
-  const a = worldAbilities[s.world % 4];
-  gain(s, Math.max(a.seconds ? 25 : 0, production(s) * a.seconds));
-  s.charge = Math.min(100, s.charge + a.charge);
+  if ([0, 1, 2, 4, 5, 8, 10].includes(s.world)) return s.worldMeter >= 10;
+  if (s.world === 6) return s.worldStacks < 10 && s.counts.some((n) => n > 0);
+  if (s.world === 7) return s.worldStacks < 10 && s.energy >= 1000;
+  return true;
+}
+export function worldAbility(s: State, now = Date.now()) {
+  if (!abilityAvailable(s, now)) return false;
+  const rate = production(s),
+    meter = s.worldMeter / 100,
+    types = s.counts.filter((n) => n > 0).length;
+  let seconds = 0;
+  switch (s.world) {
+    case 0:
+      seconds = 60 * meter;
+      break;
+    case 1:
+      seconds = 90 * meter;
+      break;
+    case 2:
+      seconds = 40 * meter;
+      s.charge = Math.min(100, s.charge + s.worldMeter);
+      break;
+    case 3:
+      seconds = 5 * types;
+      break;
+    case 4:
+      seconds = 100 * meter;
+      break;
+    case 5:
+      s.charge = Math.min(100, s.charge + s.worldMeter);
+      break;
+    case 6: {
+      const i = s.counts.findIndex((n) => n > 0);
+      s.counts[i]--;
+      s.worldStacks++;
+      break;
+    }
+    case 7:
+      s.energy -= Math.max(100, s.energy * 0.1);
+      s.worldStacks++;
+      break;
+    case 8:
+      seconds = 180 * meter;
+      break;
+    case 9:
+      seconds = 30;
+      s.charge = Math.min(100, s.charge + 30);
+      break;
+    case 10:
+      seconds = 120 * meter;
+      break;
+    case 11:
+      seconds = 10 * types;
+      s.charge = 100;
+      break;
+  }
+  gain(s, rate * seconds);
+  s.worldMeter = 0;
   s.worldReady = now + 90000;
   return true;
+}
+// A single ordered pass: one selected batch per structure type, all affordable research.
+// Relics deliberately retain individual purchases; the Legacy bulk action only claims rewards.
+export function buyAll(s: State, kind: string, qty = 1) {
+  let bought = 0;
+  if (kind === "structures")
+    units.forEach((_, i) => {
+      if (buy(s, i, qty)) bought += qty;
+    });
+  if (kind === "research")
+    research.forEach((_, i) => {
+      if (learn(s, i)) bought++;
+    });
+  if (kind === "legacy") {
+    challenges.forEach((_, i) => {
+      if (claimChallenge(s, i)) bought++;
+    });
+    sectors.forEach((_, i) => {
+      if (claimSector(s, i)) bought++;
+    });
+  }
+  return bought;
 }
 export function advance(s: State, from: number, to: number) {
   const end = Math.max(from, to),
     start = Math.max(from, end - 8 * 3600000),
     boosted = Math.max(0, Math.min(end, s.boostUntil) - start);
-  const earned =
+  const elapsed = (end - start) / 1000;
+  const growthRate =
+    s.world === 4
+      ? 1
+      : s.world === 5
+        ? 2
+        : s.world === 8
+          ? 0.5
+          : s.world === 10
+            ? 1
+            : 0;
+  let earned =
     (production(s) * (end - start + (boostMultiplier(s) - 1) * boosted)) / 1000;
+  if (s.world === 10) {
+    const base = production(s) / worldFactor(s),
+      initial = s.worldMeter;
+    const integral = (seconds: number) => {
+      const rising = Math.min(seconds, 100 - initial);
+      return (
+        seconds * (1 + initial / 100) +
+        (rising * rising) / 200 +
+        ((seconds - rising) * (100 - initial)) / 100
+      );
+    };
+    earned =
+      base *
+      (integral(elapsed) + (boostMultiplier(s) - 1) * integral(boosted / 1000));
+  }
+  s.worldMeter = Math.min(100, s.worldMeter + elapsed * growthRate);
   gain(s, earned);
   if (end >= s.nextComet + 15000) s.nextComet = end + 45000;
   return earned;
@@ -975,6 +1212,7 @@ export const echoReward = (s: State) =>
     ? 0
     : Math.floor(
         (Math.floor(Math.log10(s.earned / 1e6)) +
+          (sectorIndex(s) === 3 ? 5 : 0) +
           1 +
           Math.max(0, s.world - 2)) *
           (rank(s, 7) ? 1.5 : 1) *
@@ -997,6 +1235,8 @@ function resetRun(s: State) {
     comets: s.comets,
     lifetime: s.lifetime,
     ascensions: s.ascensions,
+    theme: s.theme,
+    sectorClaims: [...s.sectorClaims],
     sound: s.sound,
     autoEnabled: s.autoEnabled,
     autoPolicy: s.autoPolicy,
@@ -1126,6 +1366,23 @@ export function parseSave(value: unknown): State | null {
     return null;
   for (const k of ["worldReady", "nextAuto"])
     if (s[k] !== undefined && !integer(s[k])) return null;
+  if (s.theme !== undefined && !themes.some((t) => t.id === s.theme))
+    return null;
+  if (
+    s.worldMeter !== undefined &&
+    (typeof s.worldMeter !== "number" ||
+      !Number.isFinite(s.worldMeter) ||
+      s.worldMeter < 0 ||
+      s.worldMeter > 100)
+  )
+    return null;
+  if (
+    s.worldStacks !== undefined &&
+    (!integer(s.worldStacks) || Number(s.worldStacks) > 10)
+  )
+    return null;
+  if (s.sectorClaims !== undefined && !ids(s.sectorClaims, sectors.length))
+    return null;
   const result = {
     ...fresh(),
     ...s,

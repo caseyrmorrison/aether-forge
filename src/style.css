@@ -1206,3 +1206,119 @@ dialog p {
     }
   }
 }
+
+:root {
+  --theme-accent: #8ce7be;
+  --theme-wash: #142c26;
+  --theme-bg: #080c12;
+}
+:root[data-theme="nebula"] {
+  --theme-accent: #c39aff;
+  --theme-wash: #291c3b;
+  --theme-bg: #100c19;
+}
+:root[data-theme="solar"] {
+  --theme-accent: #ffbd75;
+  --theme-wash: #38251c;
+  --theme-bg: #160e0c;
+}
+:root[data-theme="midnight"] {
+  --theme-accent: #78baff;
+  --theme-wash: #15263e;
+  --theme-bg: #070c1b;
+}
+body {
+  background-color: var(--theme-bg);
+}
+.brand-icon,
+.energy-number,
+.item-price,
+.eyebrow,
+.base-status,
+#mechanic-value {
+  color: var(--theme-accent);
+}
+#harvest,
+.primary {
+  background: var(--theme-accent);
+}
+.ability-button,
+.sector-card,
+.mechanic-panel {
+  background: var(--theme-wash);
+}
+.tabs button.active {
+  color: var(--theme-accent);
+  border-color: var(--theme-accent);
+}
+.progress-track > div,
+.live-dot {
+  background: var(--theme-accent);
+}
+.base-status {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 12px;
+}
+.mechanic-panel {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.mechanic-panel p {
+  margin: 0 0 5px;
+  color: #c1cad4;
+}
+#bulk-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+#bulk-controls[hidden] {
+  display: none;
+}
+#bulk-controls button {
+  padding: 10px 14px;
+  white-space: nowrap;
+  color: var(--theme-accent);
+}
+#bulk-hint {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #a0abba;
+}
+.sector-card {
+  border: 1px solid #ffffff18;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.sector-card h3 {
+  margin: 8px 0;
+}
+.sector-card p {
+  font-size: 12px;
+  color: #b8c6d4;
+}
+.sector-card button {
+  padding: 10px;
+  color: var(--theme-accent);
+  border: 1px solid #ffffff25;
+}
+.theme-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+.theme-label select {
+  background: var(--theme-wash);
+  color: var(--theme-accent);
+  padding: 10px;
+  border: 1px solid #ffffff30;
+  border-radius: 8px;
+}
