@@ -20,6 +20,8 @@ input {
   -webkit-tap-highlight-color: transparent;
 }
 button {
+  /* Allow scrolling and pinch zoom, but do not zoom on rapid game taps. */
+  touch-action: manipulation;
   font: inherit;
   color: inherit;
   cursor: pointer;
