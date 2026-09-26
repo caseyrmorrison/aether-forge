@@ -14,6 +14,7 @@ import {
   production,
   clickPower,
   ascensionReward,
+  balance,
 } from "./game.ts";
 test("buying requires funds and starts automatic production", () => {
   const s = fresh();
@@ -21,7 +22,7 @@ test("buying requires funds and starts automatic production", () => {
   gain(s, 15);
   assert.equal(buy(s, 0, 1), true);
   assert.equal(s.energy, 0);
-  assert.equal(production(s), 0.8);
+  assert.equal(production(s), units[0].rate);
   assert.equal(s.earned, 15);
 });
 test("bulk purchases use the geometric price curve", () => {
@@ -44,14 +45,25 @@ test("research, worlds and stardust compound production", () => {
   s.upgrades = [0, 1, 2, 3, 4, 5];
   s.world = 2;
   s.shards = 10;
-  assert.equal(production(s), 960);
-  assert.equal(clickPower(s), 198);
+  const stardust = 1 + 10 * balance.stardustBonus;
+  const expected =
+    10 * units[0].rate * 2 * 2 * 3 * worlds[2].multiplier * stardust;
+  assert.ok(Math.abs(production(s) - expected) < 1e-9);
+  assert.ok(
+    Math.abs(
+      clickPower(s) - (15 * worlds[2].multiplier * stardust + expected * 0.05),
+    ) < 1e-9,
+  );
 });
 test("ascension reward uses earned energy, not remaining reserve", () => {
   const s = fresh();
   gain(s, 400000);
   s.energy = 0;
-  assert.equal(ascensionReward(s), 2);
+  assert.equal(
+    ascensionReward(s),
+    Math.floor(balance.stardustScale * 4 ** balance.stardustExponent),
+  );
+  assert.ok(ascensionReward(s) > 0);
   assert.equal(s.lifetime, 400000);
 });
 test("invalid income cannot corrupt game state", () => {
@@ -129,9 +141,12 @@ test("income integration counts boost expiration exactly and caps offline time",
   const s = fresh();
   s.counts[0] = 10;
   s.boostUntil = 21000;
-  assert.equal(advance(s, 1000, 31000), 8 * (20 * 3 + 10));
+  const rate = production(s);
+  assert.ok(Math.abs(advance(s, 1000, 31000) - rate * (20 * 3 + 10)) < 1e-9);
   s.boostUntil = 0;
-  assert.equal(advance(s, 31000, 31000 + 12 * 3600000), 8 * 8 * 3600);
+  assert.ok(
+    Math.abs(advance(s, 31000, 31000 + 12 * 3600000) - rate * 8 * 3600) < 1e-6,
+  );
 });
 test("comets cannot be claimed early, expired, or twice", () => {
   const s = fresh();
@@ -253,14 +268,14 @@ test("specializations are exclusive per run and reset after ascension", () => {
   const s = fresh();
   s.counts[0] = 10;
   assert.ok(chooseRole(s, 0));
-  assert.equal(production(s), 16);
+  assert.ok(Math.abs(production(s) - 10 * units[0].rate * 1.5) < 1e-9);
   assert.equal(price(s, 1), 85);
   assert.equal(chooseRole(s, 2), false);
   s.earned = 1e6;
   assert.equal(ascend(s).role, -1);
   const e = fresh();
   chooseRole(e, 1);
-  assert.equal(worldPrice(e, 1), 10500);
+  assert.equal(worldPrice(e, 1), Math.ceil(worlds[1].cost * 0.7));
 });
 test("silent trial suspends inherited powers and blocks every manual harvest", () => {
   const s = fresh();
@@ -271,7 +286,7 @@ test("silent trial suspends inherited powers and blocks every manual harvest", (
   const t = startTrial(s, 0);
   assert.equal(t.counts[0], 1);
   assert.equal(t.counts[5], 0);
-  assert.equal(production(t), 0.8);
+  assert.equal(production(t), units[0].rate);
   assert.equal(harvest(t), 0);
   assert.equal(t.clicks, 0);
   assert.equal(t.energy, 0);
@@ -414,7 +429,7 @@ test("sector rewards are one-time and themes survive resets", () => {
 test("world mechanics consume resources and enforce sacrifice and seeding limits", () => {
   const s = fresh();
   assert.equal(abilityAvailable(s, 1000), false);
-  for (let i = 0; i < 5; i++) harvest(s, 1000);
+  for (let i = 0; i < 10; i++) harvest(s, 1000);
   assert.equal(s.worldMeter, 10);
   assert.ok(worldAbility(s, 1000));
   assert.equal(s.worldMeter, 0);
@@ -448,4 +463,243 @@ test("silence income integrates equally across offline and foreground intervals"
   assert.equal(a.worldMeter, 100);
   harvest(a);
   assert.equal(a.worldMeter, 0);
+});
+
+import {
+  BUY_MAX,
+  MAX_BATCH,
+  SAVE_KEY,
+  catchComet as catchCometV5,
+  explore as exploreV5,
+  format,
+  load,
+  maxAffordable,
+  nextStardustAt,
+  readyRewards,
+  resetAll,
+  save,
+  unitOutput,
+  worldAbility as worldAbilityV5,
+} from "./game.ts";
+
+/** Run `body` with an in-memory localStorage, restoring the real global afterwards. */
+function withStorage(body: (store: Map<string, string>) => void) {
+  const store = new Map<string, string>();
+  const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, String(v)),
+      removeItem: (k: string) => void store.delete(k),
+    },
+  });
+  try {
+    body(store);
+  } finally {
+    if (original) Object.defineProperty(globalThis, "localStorage", original);
+    else delete (globalThis as { localStorage?: unknown }).localStorage;
+  }
+}
+
+test("solar ignition's fractional charge survives a save round trip (save-wipe regression)", () => {
+  const s = fresh();
+  s.world = 5;
+  s.worldMeter = 37.774;
+  assert.ok(worldAbilityV5(s, 1000));
+  assert.ok(!Number.isInteger(s.charge));
+  const loaded = parseSave(JSON.parse(JSON.stringify(s)));
+  assert.ok(
+    loaded,
+    "a legitimately fractional charge must not invalidate the save",
+  );
+  assert.equal(loaded.charge, s.charge);
+});
+
+test("an unreadable save is backed up and never silently discarded", () => {
+  withStorage((store) => {
+    store.set(SAVE_KEY, "{not json");
+    const broken = load();
+    assert.ok(broken.backupKey);
+    assert.equal(store.get(broken.backupKey!), "{not json");
+    assert.equal(broken.state.energy, 0);
+
+    store.clear();
+    const s = fresh();
+    s.energy = 1234;
+    assert.ok(save(s));
+    const ok = load();
+    assert.equal(ok.backupKey, undefined);
+    assert.equal(ok.state.energy, 1234);
+
+    store.clear();
+    assert.equal(
+      load().backupKey,
+      undefined,
+      "a first visit is not a corrupt save",
+    );
+  });
+});
+
+test("max purchases buy exactly the largest affordable batch", () => {
+  const s = fresh();
+  s.energy = 1e6;
+  const n = maxAffordable(s, 0);
+  assert.ok(n > 1);
+  assert.ok(price(s, 0, n) <= s.energy);
+  assert.ok(price(s, 0, n + 1) > s.energy);
+  assert.ok(buy(s, 0, n));
+  assert.equal(maxAffordable(fresh(), 0), 0);
+  assert.equal(buy(fresh(), 0, MAX_BATCH + 1), false);
+  const t = fresh();
+  t.energy = 1e9;
+  const top = units.findLastIndex((u) => u.base <= 1e9);
+  const bought = buyAll(t, "structures", BUY_MAX);
+  assert.ok(bought > 0);
+  assert.ok(
+    t.counts[top] > 0,
+    "the most expensive affordable tier is bought first",
+  );
+  assert.ok(
+    t.energy >= 0 && t.energy < price(t, 0),
+    "drones soak up the remainder",
+  );
+});
+
+test("per-unit output sums to total production", () => {
+  const s = fresh();
+  s.counts = units.map((_, i) => i + 3);
+  s.upgrades = research.map((_, i) => i);
+  s.world = 7;
+  s.role = 0;
+  const sum = units.reduce((n, _, i) => n + unitOutput(s, i) * s.counts[i], 0);
+  assert.ok(Math.abs(sum / production(s) - 1) < 1e-12);
+});
+
+test("large numbers keep readable suffixes and never round up to 1000", () => {
+  assert.equal(format(999), "999");
+  assert.equal(format(999.6), "1.00K");
+  assert.equal(format(999_950), "1.00M");
+  assert.equal(format(2.5e28), "25.0Oc");
+  assert.equal(format(1e36), "1.00e36");
+  assert.equal(format(Infinity), "∞");
+});
+
+test("ready rewards count both challenges and sector milestones", () => {
+  const s = fresh();
+  assert.equal(readyRewards(s), 0);
+  s.totalClicks = 500;
+  s.bestWorld = 2;
+  assert.equal(readyRewards(s), 2);
+  buyAll(s, "legacy");
+  assert.equal(readyRewards(s), 0);
+});
+
+test("a full reset erases progress but keeps presentation preferences", () => {
+  const s = fresh();
+  s.echoes = 50;
+  s.shards = 9;
+  s.relics[1] = 2;
+  s.theme = "solar";
+  s.sound = true;
+  const r = resetAll(s);
+  assert.equal(r.echoes, 0);
+  assert.equal(r.shards, 0);
+  assert.equal(r.relics[1], 0);
+  assert.equal(r.theme, "solar");
+  assert.equal(r.sound, true);
+});
+
+test("next stardust threshold is the earned amount that raises the reward", () => {
+  const s = fresh();
+  s.earned = 5e6;
+  const at = nextStardustAt(s);
+  assert.ok(at > s.earned);
+  const t = fresh();
+  t.earned = at * 1.0001;
+  assert.equal(ascensionReward(t), ascensionReward(s) + 1);
+});
+
+/**
+ * Greedy simulated player: harvests, buys the best output per cost, learns research,
+ * travels, catches comets, and uses overdrive and world powers. Returns the minute
+ * each world was first reached. Guards the pacing against runaway compounding.
+ */
+function simulateRun(minutes: number, clicksPerSecond = 3, start = fresh()) {
+  let s = start;
+  s.nextComet = 45000;
+  const reached: number[] = [0];
+  const marginal = (i: number) => {
+    const base = production(s);
+    s.counts[i]++;
+    const next = production(s);
+    s.counts[i]--;
+    return next - base;
+  };
+  for (let t = 0; t < minutes * 60000; t += 1000) {
+    for (let c = 0; c < clicksPerSecond; c++) harvest(s, t);
+    advance(s, t, t + 1000);
+    catchCometV5(s, t + 1000);
+    activateBoost(s, t + 1000);
+    if (s.role < 0) chooseRole(s, 0);
+    if (abilityAvailable(s, t + 1000) && s.worldMeter >= 60)
+      worldAbilityV5(s, t + 1000);
+    if (t % 5000 === 0) {
+      while (exploreV5(s, s.world + 1)) reached[s.world] = t / 60000;
+      buyAll(s, "research");
+      for (let k = 0; k < 200; k++) {
+        let best = -1,
+          score = 0;
+        units.forEach((_, i) => {
+          const p = price(s, i);
+          if (p <= s.energy && marginal(i) / p > score) {
+            score = marginal(i) / p;
+            best = i;
+          }
+        });
+        if (best < 0 || !buy(s, best, 1)) break;
+      }
+    }
+  }
+  return { reached, state: s };
+}
+
+test("pacing: a fresh expedition is a climb, not a sprint", () => {
+  const { reached, state } = simulateRun(60);
+  const firstAscension = fresh();
+  assert.ok(
+    reached[1] !== undefined,
+    "an active player reaches world 2 within an hour",
+  );
+  assert.ok(
+    reached[1] >= 4,
+    `world 2 took ${reached[1]} minutes; expected at least 4`,
+  );
+  assert.equal(
+    reached[4],
+    undefined,
+    "world 5 should need prestige, not one hour",
+  );
+  assert.ok(
+    state.earned >= balance.stardustBase,
+    "the first ascension unlocks in the first hour",
+  );
+  assert.ok(
+    ascensionReward(state) < 20,
+    "one early run cannot mint a huge prestige bonus",
+  );
+  assert.equal(firstAscension.shards, 0);
+});
+
+test("pacing: prestige accelerates the next run without skipping the whole game", () => {
+  const start = fresh();
+  start.ascensions = 1;
+  start.shards = 30;
+  const { reached } = simulateRun(45, 3, start);
+  assert.ok(reached[2] !== undefined, "stardust makes the early worlds quick");
+  assert.equal(
+    reached[7],
+    undefined,
+    "30 stardust must not carry a run to world 8",
+  );
 });

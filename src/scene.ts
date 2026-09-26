@@ -139,16 +139,27 @@ export function createScene(canvas: HTMLCanvasElement) {
     ring.position.y = -0.4;
     orbit.add(ring);
   });
+  // One visible drone per owned drone (up to 24), spread evenly around the ring.
   const drones = new THREE.Group();
   orbit.add(drones);
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const drone = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.06),
-      new THREE.MeshBasicMaterial({ color: 0xaeffe5 }),
-    );
-    drone.position.set(Math.cos(a) * 2.4, -0.4, Math.sin(a) * 2.4);
+  const droneGeometry = new THREE.OctahedronGeometry(0.06);
+  const droneMaterial = new THREE.MeshBasicMaterial({ color: 0xaeffe5 });
+  const droneMeshes = Array.from({ length: 24 }, () => {
+    const drone = new THREE.Mesh(droneGeometry, droneMaterial);
+    drone.visible = false;
     drones.add(drone);
+    return drone;
+  });
+  let droneCount = -1;
+  function setDrones(count: number) {
+    const n = Math.min(droneMeshes.length, count);
+    if (n === droneCount) return;
+    droneCount = n;
+    droneMeshes.forEach((drone, i) => {
+      drone.visible = i < n;
+      const a = (i / Math.max(1, n)) * Math.PI * 2;
+      drone.position.set(Math.cos(a) * 2.4, -0.4, Math.sin(a) * 2.4);
+    });
   }
   const starGeo = new THREE.BufferGeometry();
   const positions = new Float32Array(500 * 3);
@@ -210,14 +221,23 @@ export function createScene(canvas: HTMLCanvasElement) {
   const resize = () => {
     const w = canvas.clientWidth,
       h = canvas.clientHeight;
+    if (!w || !h) return;
     renderer.setSize(w, h, false);
     composer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    // Resizing clears the drawing buffer; redraw now to avoid a blank frame.
+    composer.render();
   };
   const observer = new ResizeObserver(resize);
   observer.observe(canvas);
   resize();
+  // Skip rendering while the scene is scrolled out of view (common on phones).
+  let onScreen = true;
+  const visibility = new IntersectionObserver(([entry]) => {
+    onScreen = entry.isIntersecting;
+  });
+  visibility.observe(canvas);
   canvas.addEventListener("pointermove", (e) => {
     const rect = canvas.getBoundingClientRect();
     pointerX = (e.clientX - rect.left) / rect.width - 0.5;
@@ -229,7 +249,7 @@ export function createScene(canvas: HTMLCanvasElement) {
   const clock = new THREE.Clock();
   function animate() {
     frame = requestAnimationFrame(animate);
-    if (document.hidden) return;
+    if (document.hidden || !onScreen) return;
     const t = clock.getElapsedTime();
     world.rotation.y = reduced ? 0.3 : t * 0.1;
     world.position.y = reduced ? 0 : Math.sin(t * 0.8) * 0.09;
@@ -258,6 +278,7 @@ export function createScene(canvas: HTMLCanvasElement) {
     setActivity(counts: number[], boosted: boolean, cometVisible: boolean) {
       overdrive = boosted;
       comet.visible = cometVisible;
+      setDrones(counts[0] ?? 0);
       station.setCounts(counts);
     },
     setTheme(color: number) {
@@ -290,6 +311,7 @@ export function createScene(canvas: HTMLCanvasElement) {
     dispose() {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      visibility.disconnect();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.Points) {
           o.geometry.dispose();

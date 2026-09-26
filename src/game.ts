@@ -1,114 +1,128 @@
+/** Central tuning knobs shared by the economy, the interface, and balance tests. */
+export const balance = {
+  /**
+   * Stardust from a run: floor(stardustScale × (earned / stardustBase) ^ stardustExponent).
+   * A low exponent keeps prestige from compounding geometrically; see the pacing tests.
+   */
+  stardustBase: 1e5,
+  stardustExponent: 0.15,
+  stardustScale: 3,
+  /** Permanent production and harvest bonus per stardust. */
+  stardustBonus: 0.15,
+};
+export const stardustMultiplier = (s: State) =>
+  s.trial < 0 ? 1 + s.shards * balance.stardustBonus : 1;
 export const units = [
   {
     name: "Orbiting drone",
     detail: "A tireless companion. A little more possibility.",
     base: 15,
-    rate: 0.8,
+    rate: 0.2,
     icon: "◇",
   },
   {
     name: "Crystal extractor",
     detail: "Turn the planet’s hidden veins into pure energy.",
     base: 100,
-    rate: 5,
+    rate: 0.5,
     icon: "♢",
   },
   {
     name: "Solar array",
     detail: "Catch the light between distant stars.",
     base: 650,
-    rate: 28,
+    rate: 1.2,
     icon: "▦",
   },
   {
     name: "Aether refinery",
     detail: "Distill raw starlight into something extraordinary.",
     base: 4000,
-    rate: 150,
+    rate: 3.5,
     icon: "⬡",
   },
   {
     name: "Orbital foundry",
     detail: "An entire industry, suspended in the void.",
     base: 24000,
-    rate: 800,
+    rate: 8,
     icon: "◎",
   },
   {
     name: "Stellar engine",
     detail: "Put the heart of a star to work.",
     base: 150000,
-    rate: 4500,
+    rate: 20,
     icon: "✺",
   },
   {
     name: "Lunar greenhouse",
     detail: "Grow living aether in orbital gardens.",
     base: 1e6,
-    rate: 25000,
+    rate: 50,
     icon: "❋",
   },
   {
     name: "Gravity loom",
     detail: "Weave space-time into a renewable resource.",
     base: 8e6,
-    rate: 150000,
+    rate: 150,
     icon: "⌘",
   },
   {
     name: "Nebula harvester",
     detail: "Gather the dreams of unborn stars.",
     base: 7e7,
-    rate: 1e6,
+    rate: 450,
     icon: "✥",
   },
   {
     name: "Singularity reactor",
     detail: "A captive black hole. A limitless appetite.",
     base: 7e8,
-    rate: 8e6,
+    rate: 1500,
     icon: "◉",
   },
   {
     name: "Reality synthesizer",
     detail: "Rewrite the rules of matter itself.",
     base: 8e9,
-    rate: 7e7,
+    rate: 4500,
     icon: "⬢",
   },
   {
     name: "Genesis ark",
     detail: "Build the seed of another universe.",
     base: 1e11,
-    rate: 7e8,
+    rate: 15000,
     icon: "✵",
   },
   {
     name: "Chrono cathedral",
     detail: "Borrow a little time from every possible future.",
-    base: 2000000000000.0,
-    rate: 10000000000.0,
+    base: 2e12,
+    rate: 70000,
     icon: "\u2736",
   },
   {
     name: "Void nursery",
     detail: "Raise newborn universes in the dark.",
-    base: 50000000000000.0,
-    rate: 200000000000.0,
+    base: 5e13,
+    rate: 350000,
     icon: "\u2736",
   },
   {
     name: "Paradox lattice",
     detail: "Harvest two contradictory realities at once.",
-    base: 2000000000000000.0,
-    rate: 5000000000000.0,
+    base: 2e15,
+    rate: 2.5e6,
     icon: "\u2736",
   },
   {
     name: "Omniverse forge",
     detail: "Every universe becomes another ember.",
     base: 1e17,
-    rate: 200000000000000.0,
+    rate: 1.5e7,
     icon: "\u2736",
   },
 ];
@@ -122,151 +136,151 @@ export const research = [
   {
     name: "Quantum efficiency",
     detail: "All structures produce 2× more energy.",
-    cost: 850,
+    cost: 1000,
     kind: "production",
   },
   {
     name: "Harmonic resonance",
     detail: "Manual harvests gain 5% of your production.",
-    cost: 2500,
+    cost: 3000,
     kind: "synergy",
   },
   {
     name: "Stellar alignment",
     detail: "All structures produce another 2× energy.",
-    cost: 12000,
+    cost: 20000,
     kind: "production",
   },
   {
     name: "Deep-core resonance",
     detail: "Manual harvests become 5× stronger.",
-    cost: 60000,
+    cost: 600000,
     kind: "click",
   },
   {
     name: "Zero-point energy",
     detail: "All structures produce another 3× energy.",
-    cost: 300000,
+    cost: 2.5e7,
     kind: "production",
   },
   {
     name: "Drone intelligence",
     detail: "Orbiting drones produce 10× more.",
-    cost: 8e5,
+    cost: 2.5e8,
     kind: "drones",
   },
   {
     name: "Living circuitry",
     detail: "All production increases 2×.",
-    cost: 3e6,
+    cost: 4e9,
     kind: "production",
   },
   {
     name: "Pulse capacitors",
     detail: "Overdrive lasts 10 seconds longer.",
-    cost: 1e7,
+    cost: 5e10,
     kind: "duration",
   },
   {
     name: "Comet cartography",
     detail: "Comet rewards become 2× stronger.",
-    cost: 3e7,
+    cost: 4e11,
     kind: "comet",
   },
   {
     name: "Gravitational touch",
     detail: "Manual harvests become 10× stronger.",
-    cost: 1e8,
+    cost: 3e12,
     kind: "click",
   },
   {
     name: "Nebula harmonics",
     detail: "All production increases 3×.",
-    cost: 4e8,
+    cost: 3e13,
     kind: "production",
   },
   {
     name: "Industry of stars",
     detail: "Structures 7–12 produce 3× more.",
-    cost: 2e9,
+    cost: 4e14,
     kind: "industry",
   },
   {
     name: "Perfect resonance",
     detail: "Manual harvests gain another 10% of production.",
-    cost: 1e10,
+    cost: 4e15,
     kind: "synergy",
   },
   {
     name: "Event horizon",
     detail: "Overdrive increases from 3× to 5×.",
-    cost: 6e10,
+    cost: 4e16,
     kind: "overdrive",
   },
   {
     name: "Multiverse exchange",
     detail: "All production increases 4×.",
-    cost: 4e11,
+    cost: 4e17,
     kind: "production",
   },
   {
     name: "Eternal combustion",
     detail: "Each manual harvest charges Overdrive twice as fast.",
-    cost: 3e12,
+    cost: 4e18,
     kind: "charge",
   },
   {
     name: "The final theorem",
     detail: "All production increases 5×. Unlock a legendary relic.",
-    cost: 3e13,
+    cost: 2e20,
     kind: "production",
   },
   {
     name: "Temporal industry",
     detail: "Structures 13\u201316 produce 5\u00d7 more.",
-    cost: 100000000000000.0,
+    cost: 1.5e21,
     kind: "industry",
   },
   {
     name: "Comet collapse",
     detail: "Comet rewards increase 5\u00d7.",
-    cost: 500000000000000.0,
+    cost: 1.2e22,
     kind: "comet",
   },
   {
     name: "Resonance cascade",
     detail: "All production increases 5\u00d7.",
-    cost: 2000000000000000.0,
+    cost: 8e22,
     kind: "production",
   },
   {
     name: "Supercritical core",
     detail: "Overdrive gains another +5\u00d7 multiplier.",
-    cost: 1e16,
+    cost: 5e23,
     kind: "overdrive",
   },
   {
     name: "Chrono synthesis",
     detail: "All production increases 5\u00d7.",
-    cost: 8e16,
+    cost: 6e24,
     kind: "production",
   },
   {
     name: "Hand of creation",
     detail: "Harvests gain another 25% of base production.",
-    cost: 5e17,
+    cost: 5e25,
     kind: "synergy",
   },
   {
     name: "The impossible engine",
     detail: "All production increases 10\u00d7.",
-    cost: 4e18,
+    cost: 5e26,
     kind: "production",
   },
   {
     name: "Beyond mathematics",
     detail: "All production increases 10\u00d7.",
-    cost: 4e19,
+    cost: 8e27,
     kind: "production",
   },
 ];
@@ -282,7 +296,7 @@ export const worlds = [
   {
     name: "Ember Reach",
     type: "VOLCANIC WORLD",
-    cost: 15000,
+    cost: 25000,
     multiplier: 2,
     color: 0xffa16a,
     description: "From ancient fire, a new beginning takes shape.",
@@ -290,7 +304,7 @@ export const worlds = [
   {
     name: "Violet Expanse",
     type: "NEBULA WORLD",
-    cost: 160000,
+    cost: 6e6,
     multiplier: 4,
     color: 0xba97ff,
     description: "At the edge of the known, possibility becomes infinite.",
@@ -298,7 +312,7 @@ export const worlds = [
   {
     name: "Celestial Heart",
     type: "TRANSCENDENT WORLD",
-    cost: 1800000,
+    cost: 1.5e9,
     multiplier: 8,
     color: 0x9ddfff,
     description: "Every distant light was leading you here.",
@@ -306,7 +320,7 @@ export const worlds = [
   {
     name: "Tidal Sanctuary",
     type: "OCEAN WORLD",
-    cost: 3e7,
+    cost: 4e11,
     multiplier: 16,
     color: 0x4dcaf2,
     description: "An ocean of stars, waiting for the tide to turn.",
@@ -314,7 +328,7 @@ export const worlds = [
   {
     name: "Golden Elysium",
     type: "SOLAR WORLD",
-    cost: 8e8,
+    cost: 1e14,
     multiplier: 32,
     color: 0xffd36e,
     description: "In the light of twin suns, nothing stays ordinary.",
@@ -322,7 +336,7 @@ export const worlds = [
   {
     name: "Obsidian Rift",
     type: "SINGULARITY WORLD",
-    cost: 4e10,
+    cost: 2.5e16,
     multiplier: 64,
     color: 0xff79ae,
     description: "Beyond the event horizon, the universe holds its breath.",
@@ -330,7 +344,7 @@ export const worlds = [
   {
     name: "Genesis Beyond",
     type: "ORIGIN WORLD",
-    cost: 4e12,
+    cost: 6e18,
     multiplier: 128,
     color: 0xebdeff,
     description:
@@ -339,33 +353,33 @@ export const worlds = [
   {
     name: "Chronos Garden",
     type: "TEMPORAL WORLD",
-    cost: 100000000000000.0,
+    cost: 1.5e21,
     multiplier: 256,
-    color: 9240508,
+    color: 0x8cffbc,
     description: "Every second blooms into a thousand possible futures.",
   },
   {
     name: "Mirror Cosmos",
     type: "PARADOX WORLD",
-    cost: 8000000000000000.0,
+    cost: 4e23,
     multiplier: 512,
-    color: 16758248,
+    color: 0xffb5e8,
     description: "You see a universe. It sees you back.",
   },
   {
     name: "The Silent Crown",
     type: "VOID WORLD",
-    cost: 1e18,
+    cost: 1e26,
     multiplier: 1024,
-    color: 10263295,
+    color: 0x9c9aff,
     description: "Even the silence has learned to create.",
   },
   {
     name: "Infinity Unbound",
     type: "OMNIVERSE WORLD",
-    cost: 1e20,
+    cost: 2.5e28,
     multiplier: 2048,
-    color: 16771763,
+    color: 0xffeab3,
     description: "There was never an edge. Only another beginning.",
   },
 ];
@@ -672,7 +686,7 @@ export function claimChallenge(s: State, i: number) {
 export const roles = [
   {
     name: "Engineer",
-    detail: "2× structure production; structures cost 15% less.",
+    detail: "1.5× structure production; structures cost 15% less.",
   },
   {
     name: "Explorer",
@@ -754,17 +768,13 @@ export function toggleArtifact(s: State, i: number) {
   s.artifacts.push(i);
   return true;
 }
-export const production = (s: State) =>
-  units.reduce(
-    (n, u, i) =>
-      n +
-      u.rate *
-        s.counts[i] *
-        (i === 0 && s.upgrades.includes(6) ? 10 : 1) *
-        (i >= 6 && i < 12 && s.upgrades.includes(12) ? 3 : 1) *
-        (i >= 12 && s.upgrades.includes(18) ? 5 : 1),
-    0,
-  ) *
+/** Research that multiplies a single structure tier (drones, industry of stars, temporal industry). */
+const tierMultiplier = (s: State, i: number) =>
+  (i === 0 && s.upgrades.includes(6) ? 10 : 1) *
+  (i >= 6 && i < 12 && s.upgrades.includes(12) ? 3 : 1) *
+  (i >= 12 && s.upgrades.includes(18) ? 5 : 1);
+/** Every multiplier that applies equally to all structures. */
+export const globalMultiplier = (s: State) =>
   [
     [1, 2],
     [3, 2],
@@ -779,18 +789,26 @@ export const production = (s: State) =>
     [25, 10],
   ].reduce((n, [i, m]) => n * (s.upgrades.includes(i) ? m : 1), 1) *
   worlds[s.world].multiplier *
-  (s.trial < 0 ? 1 + s.shards * 0.15 : 1) *
+  stardustMultiplier(s) *
   (1 + rank(s, 1) * 0.25) *
   (rank(s, 7) ? 2 : 1) *
   (rank(s, 8)
     ? 2 ** Math.min(5, Math.floor(s.counts.reduce((a, b) => a + b, 0) / 100))
     : 1) *
   (rank(s, 13) ? 25 : 1) *
-  (s.role === 0 ? 2 : 1) *
+  (s.role === 0 ? 1.5 : 1) *
   (equipped(s, 0) ? 1.25 : 1) *
   (equipped(s, 4) ? 3 : 1) *
   worldFactor(s) *
   (sectorIndex(s) === 1 ? 1.25 : 1);
+/** Aether per second from one unit of a structure, with every current bonus applied. */
+export const unitOutput = (s: State, i: number) =>
+  units[i].rate * tierMultiplier(s, i) * globalMultiplier(s);
+export const production = (s: State) =>
+  units.reduce(
+    (n, u, i) => n + u.rate * s.counts[i] * tierMultiplier(s, i),
+    0,
+  ) * globalMultiplier(s);
 export const boostMultiplier = (s: State) =>
   (s.upgrades.includes(14) ? 5 : 3) +
   (s.upgrades.includes(21) ? 5 : 0) +
@@ -805,7 +823,7 @@ export const clickPower = (s: State) =>
         (s.upgrades.includes(4) ? 5 : 1) *
         (s.upgrades.includes(10) ? 10 : 1) *
         worlds[s.world].multiplier *
-        (s.trial < 0 ? 1 + s.shards * 0.15 : 1) +
+        stardustMultiplier(s) +
         production(s) *
           ((s.upgrades.includes(2) ? 0.05 : 0) +
             (s.upgrades.includes(13) ? 0.1 : 0) +
@@ -815,13 +833,24 @@ export const clickPower = (s: State) =>
       (sectorIndex(s) === 2 ? 1.5 : 1) *
       (s.world === 1 && s.worldMeter >= 80 ? 0.5 : 1) *
       (s.world === 9 && s.clicks % 2 === 1 ? 2 : 1);
+const costDiscount = (s: State) =>
+  (1 - rank(s, 3) * 0.1) *
+  (s.role === 0 ? 0.85 : 1) *
+  (equipped(s, 3) ? 0.85 : 1);
 export const price = (s: State, i: number, qty = 1) =>
   Math.ceil(
     ((units[i].base * 1.15 ** s.counts[i] * (1.15 ** qty - 1)) / 0.15) *
-      (1 - rank(s, 3) * 0.1) *
-      (s.role === 0 ? 0.85 : 1) *
-      (equipped(s, 3) ? 0.85 : 1),
+      costDiscount(s),
   );
+/** Largest batch of a structure the current reserve can pay for (0 when none). */
+export function maxAffordable(s: State, i: number) {
+  if (!units[i] || !canBuild(s, i)) return 0;
+  const first = units[i].base * 1.15 ** s.counts[i] * costDiscount(s);
+  let n = Math.floor(Math.log1p((s.energy * 0.15) / first) / Math.log(1.15));
+  n = Math.min(Math.max(0, n), MAX_BATCH);
+  while (n > 0 && price(s, i, n) > s.energy) n--;
+  return n;
+}
 export const worldPrice = (s: State, i: number) =>
   Math.ceil(worlds[i].cost * (s.role === 1 ? 0.7 : 1));
 export const canBuild = (s: State, i: number) =>
@@ -833,12 +862,14 @@ export function gain(s: State, n: number) {
     s.lifetime += n;
   }
 }
+/** Upper bound for one purchase so a single click can never freeze the game. */
+export const MAX_BATCH = 1000;
 export function buy(s: State, i: number, qty: number) {
   if (
     !units[i] ||
     !Number.isInteger(qty) ||
     qty < 1 ||
-    qty > 100 ||
+    qty > MAX_BATCH ||
     !canBuild(s, i)
   )
     return false;
@@ -875,7 +906,7 @@ export function harvest(s: State, now = Date.now()) {
   s.clicks++;
   s.totalClicks++;
   if (s.world === 0 || s.world === 1)
-    s.worldMeter = Math.min(100, s.worldMeter + (s.world === 0 ? 2 : 5));
+    s.worldMeter = Math.min(100, s.worldMeter + (s.world === 0 ? 1 : 4));
   if (s.world === 10) s.worldMeter = 0;
   if (now >= s.boostUntil)
     s.charge = Math.min(
@@ -952,6 +983,11 @@ export const sectors = [
   },
 ];
 export const sectorIndex = (s: State) => Math.floor(s.world / 3);
+export const readyRewards = (s: State) =>
+  challenges.filter((c, i) => !s.claimed.includes(i) && c.value(s) >= c.target)
+    .length +
+  sectors.filter((x, i) => !s.sectorClaims.includes(i) && s.bestWorld >= x.end)
+    .length;
 export function claimSector(s: State, i: number) {
   const sector = sectors[i];
   if (!sector || s.sectorClaims.includes(i) || s.bestWorld < sector.end)
@@ -964,9 +1000,9 @@ export function worldFactor(s: State) {
   const diversity = s.counts.filter((n) => n > 0).length;
   switch (s.world) {
     case 0:
-      return 1 + s.worldMeter / 100;
+      return 1 + s.worldMeter / 200;
     case 1:
-      return 1 + s.worldMeter / 50;
+      return 1 + s.worldMeter / 100;
     case 3:
       return 1 + diversity * 0.05;
     case 6:
@@ -985,13 +1021,13 @@ export const worldAbilities = [
   {
     name: "Crystal bloom",
     detail:
-      "Harvest to grow a living lattice: up to 2× production. Bloom spends all growth for up to 60 seconds of production.",
+      "Harvest to grow a living lattice: up to 1.5× production. Bloom spends all growth for up to 60 seconds of production.",
     meter: "Lattice growth",
   },
   {
     name: "Vent the core",
     detail:
-      "Harvest builds heat: up to 3× production, but harvest power halves at 80 heat. Vent spends heat for up to 90 seconds of production.",
+      "Harvest builds heat: up to 2× production, but harvest power halves at 80 heat. Vent spends heat for up to 90 seconds of production.",
     meter: "Core heat",
   },
   {
@@ -1118,11 +1154,19 @@ export function worldAbility(s: State, now = Date.now()) {
   s.worldReady = now + 90000;
   return true;
 }
+/** Quantity sentinel for "buy as many as the reserve allows". */
+export const BUY_MAX = -1;
 // A single ordered pass: one selected batch per structure type, all affordable research.
+// With BUY_MAX, each type buys its largest affordable batch, most expensive tier first.
 // Relics deliberately retain individual purchases; the Legacy bulk action only claims rewards.
 export function buyAll(s: State, kind: string, qty = 1) {
   let bought = 0;
-  if (kind === "structures")
+  if (kind === "structures" && qty === BUY_MAX)
+    for (let i = units.length - 1; i >= 0; i--) {
+      const n = maxAffordable(s, i);
+      if (n > 0 && buy(s, i, n)) bought += n;
+    }
+  else if (kind === "structures")
     units.forEach((_, i) => {
       if (buy(s, i, qty)) bought += qty;
     });
@@ -1189,7 +1233,10 @@ export function automate(s: State, now = Date.now()) {
       .map((u, i) => ({
         i,
         cost: price(s, i),
-        score: s.autoPolicy === "cheapest" ? price(s, i) : price(s, i) / u.rate,
+        score:
+          s.autoPolicy === "cheapest"
+            ? price(s, i)
+            : price(s, i) / (u.rate * tierMultiplier(s, i)),
       }))
       .filter((x) => canBuild(s, x.i) && x.cost <= budget)
       .sort((a, b) => a.score - b.score);
@@ -1206,7 +1253,20 @@ export function passiveActions(s: State, now = Date.now()) {
   return automate(s, now);
 }
 export const ascensionReward = (s: State) =>
-  Math.floor(Math.sqrt(s.earned / 100000));
+  s.earned < balance.stardustBase
+    ? 0
+    : Math.floor(
+        balance.stardustScale *
+          (s.earned / balance.stardustBase) ** balance.stardustExponent,
+      );
+/** Earned aether this run needed for one more stardust than the current reward. */
+export const nextStardustAt = (s: State) =>
+  Math.max(
+    balance.stardustBase,
+    balance.stardustBase *
+      ((ascensionReward(s) + 1) / balance.stardustScale) **
+        (1 / balance.stardustExponent),
+  );
 export const echoReward = (s: State) =>
   s.earned < 1e6
     ? 0
@@ -1243,6 +1303,12 @@ function resetRun(s: State) {
     autoBudget: s.autoBudget,
   };
 }
+/** Erase all progress, keeping only presentation preferences. */
+export const resetAll = (s: State): State => ({
+  ...fresh(),
+  theme: s.theme,
+  sound: s.sound,
+});
 export function ascend(s: State): State {
   if (s.trial >= 0 || ascensionReward(s) < 1) return s;
   const next = resetRun(s);
@@ -1311,6 +1377,8 @@ export function parseSave(value: unknown): State | null {
     Number(s.world) >= worlds.length
   )
     return null;
+  const finite = (n: unknown) =>
+    typeof n === "number" && Number.isFinite(n) && n >= 0;
   for (const k of [
     "echoes",
     "bestWorld",
@@ -1318,11 +1386,17 @@ export function parseSave(value: unknown): State | null {
     "bestStructures",
     "totalClicks",
     "comets",
+  ])
+    if (s[k] !== undefined && !integer(s[k])) return null;
+  // Charge can legitimately be fractional (solar ignition adds the meter value).
+  for (const k of [
     "charge",
     "boostUntil",
     "nextComet",
+    "worldReady",
+    "nextAuto",
   ])
-    if (s[k] !== undefined && !integer(s[k])) return null;
+    if (s[k] !== undefined && !finite(s[k])) return null;
   if (
     s.relics !== undefined &&
     (!Array.isArray(s.relics) ||
@@ -1364,8 +1438,6 @@ export function parseSave(value: unknown): State | null {
     ![10, 25, 50].includes(Number(s.autoBudget))
   )
     return null;
-  for (const k of ["worldReady", "nextAuto"])
-    if (s[k] !== undefined && !integer(s[k])) return null;
   if (s.theme !== undefined && !themes.some((t) => t.id === s.theme))
     return null;
   if (
@@ -1404,33 +1476,59 @@ export function parseSave(value: unknown): State | null {
   recordMilestones(result);
   return result;
 }
-export function load(): State {
+export const SAVE_KEY = "aether-forge-v1";
+/**
+ * Load the local save. An unreadable save is copied to a timestamped backup key
+ * before a fresh game starts, so autosave can never overwrite the only copy.
+ */
+export function load(): { state: State; backupKey?: string } {
+  let raw: string | null = null;
   try {
-    return (
-      parseSave(
-        JSON.parse(localStorage.getItem("aether-forge-v1") ?? "null"),
-      ) ?? fresh()
-    );
+    raw = localStorage.getItem(SAVE_KEY);
   } catch {
-    return fresh();
+    return { state: fresh() };
   }
+  if (raw === null) return { state: fresh() };
+  try {
+    const state = parseSave(JSON.parse(raw));
+    if (state) return { state };
+  } catch {
+    /* Fall through to the backup below. */
+  }
+  const backupKey = `${SAVE_KEY}-unreadable-${Date.now()}`;
+  try {
+    localStorage.setItem(backupKey, raw);
+  } catch {
+    return { state: fresh() };
+  }
+  return { state: fresh(), backupKey };
 }
 export function save(s: State) {
   s.savedAt = Date.now();
   try {
-    localStorage.setItem("aether-forge-v1", JSON.stringify(s));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     return true;
   } catch {
     return false;
   }
 }
 export function format(n: number) {
-  if (n < 1000)
+  if (!Number.isFinite(n)) return "∞";
+  if (n < 999.5)
     return n.toLocaleString("en-US", { maximumFractionDigits: n < 10 ? 1 : 0 });
-  if (n >= 1e24) return n.toExponential(2);
-  const suffix = ["K", "M", "B", "T", "Qa", "Qi", "Sx"];
+  const suffix = ["K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+  if (n >= 1000 ** (suffix.length + 1))
+    return n.toExponential(2).replace("+", "");
   let i = -1;
   while (n >= 1000 && i < suffix.length - 1) {
+    n /= 1000;
+    i++;
+  }
+  // Rounding can carry into the next unit (999.95K → "1000K"); step up instead.
+  if (
+    Number(n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0)) >= 1000 &&
+    i < suffix.length - 1
+  ) {
     n /= 1000;
     i++;
   }
