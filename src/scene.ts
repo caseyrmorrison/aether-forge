@@ -234,8 +234,8 @@ export function createScene(canvas: HTMLCanvasElement) {
   resize();
   // Skip rendering while the scene is scrolled out of view (common on phones).
   let onScreen = true;
-  const visibility = new IntersectionObserver(([entry]) => {
-    onScreen = entry.isIntersecting;
+  const visibility = new IntersectionObserver((entries) => {
+    onScreen = entries[entries.length - 1].isIntersecting;
   });
   visibility.observe(canvas);
   canvas.addEventListener("pointermove", (e) => {

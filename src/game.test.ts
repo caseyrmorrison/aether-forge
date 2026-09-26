@@ -541,6 +541,21 @@ test("an unreadable save is backed up and never silently discarded", () => {
   });
 });
 
+test("an unreadable save that cannot be backed up is flagged so autosave pauses", () => {
+  withStorage((store) => {
+    store.set(SAVE_KEY, "{not json");
+    const setItem = localStorage.setItem;
+    localStorage.setItem = () => {
+      throw new Error("QuotaExceededError");
+    };
+    const result = load();
+    localStorage.setItem = setItem;
+    assert.equal(result.unreadable, true);
+    assert.equal(result.backupKey, undefined);
+    assert.equal(store.get(SAVE_KEY), "{not json", "the original is untouched");
+  });
+});
+
 test("max purchases buy exactly the largest affordable batch", () => {
   const s = fresh();
   s.energy = 1e6;

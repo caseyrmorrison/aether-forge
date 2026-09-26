@@ -147,12 +147,25 @@ const ui = {
   tabs: [...document.querySelectorAll<HTMLButtonElement>("[data-tab]")],
 };
 
-let toastTimer: ReturnType<typeof setTimeout>;
-function toast(message: string) {
+let toastTimer: ReturnType<typeof setTimeout>,
+  pinnedUntil = 0;
+const queuedToasts: string[] = [];
+/** Show a message. Longer (important) messages are never replaced; others queue behind them. */
+function toast(message: string, ms = 4000) {
+  if (Date.now() < pinnedUntil) {
+    if (queuedToasts.length < 3) queuedToasts.push(message);
+    return;
+  }
   ui.toast.textContent = message;
   ui.toast.classList.add("visible");
+  pinnedUntil = ms > 4000 ? Date.now() + ms : 0;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => ui.toast.classList.remove("visible"), 4000);
+  toastTimer = setTimeout(() => {
+    ui.toast.classList.remove("visible");
+    pinnedUntil = 0;
+    const next = queuedToasts.shift();
+    if (next) setTimeout(() => toast(next), 300);
+  }, ms);
 }
 
 // The 3D scene is loaded after the interface so the game is playable immediately.
@@ -254,13 +267,18 @@ document.addEventListener("keydown", (e) => {
 });
 
 // A mouse or touch click leaves focus on the button, so a later Space press would
-// click it again (buying another structure). Drop that focus; keyboard activation
-// reports detail 0 and keeps focus for keyboard users.
-document.addEventListener("click", (e) => {
-  const button = (e.target as Element).closest?.("button");
-  if (e.detail > 0 && button && button === document.activeElement)
-    button.blur();
-});
+// click it again (buying another structure, or reopening a dialog whose opener gets
+// focus back when it closes). Drop that focus during capture, before the button's
+// own handler runs. Keyboard activation reports detail 0 and keeps focus.
+document.addEventListener(
+  "click",
+  (e) => {
+    const button = (e.target as Element).closest?.("button");
+    if (e.detail > 0 && button && button === document.activeElement)
+      button.blur();
+  },
+  true,
+);
 
 /* ---------- Lists ---------- */
 
@@ -273,7 +291,11 @@ let rows: {
 } = { price: [], label: [], owned: [], rate: [], buttons: [] };
 let listSignature = "";
 
-/** Structures reveal two tiers past the best one owned, plus anything affordable. */
+/**
+ * Structures reveal two tiers past the best one owned, plus any tier whose first unit
+ * this run's earnings could have paid for. Both only grow within a run, so spending
+ * never hides a structure again.
+ */
 function visibleStructures() {
   let owned = -1;
   state.counts.forEach((n, i) => {
@@ -281,7 +303,7 @@ function visibleStructures() {
   });
   let count = Math.max(2, owned + 3);
   units.forEach((_, i) => {
-    if (price(state, i) <= state.energy) count = Math.max(count, i + 1);
+    if (price(state, i) <= state.earned) count = Math.max(count, i + 1);
   });
   return Math.min(units.length, count);
 }
@@ -302,9 +324,17 @@ const hidden = (count: number, what: string) =>
     ? `<div class="item locked-item" aria-hidden="true"><span class="item-icon">?</span><span class="item-content"><span class="item-title">${count} more ${what}</span><span class="item-description">Keep growing to reveal what lies beyond.</span></span></div>`
     : "";
 
+const rowKeys = ["buy", "research", "world", "relic", "challenge", "sector"];
 function renderItems(resetScroll = false) {
   const list = ui.items;
   const savedScroll = resetScroll ? 0 : list.scrollTop;
+  // Only keyboard users keep focus inside the list (pointer clicks release it).
+  const focused = document.activeElement as HTMLElement | null;
+  const focusKey =
+    focused && list.contains(focused)
+      ? rowKeys.find((k) => focused.dataset[k] !== undefined)
+      : undefined;
+  const focusValue = focusKey ? focused!.dataset[focusKey] : undefined;
   listSignature = currentSignature();
   $(".quantity").style.visibility = tab === "structures" ? "visible" : "hidden";
   const headings: Record<string, [string, string]> = {
@@ -397,6 +427,15 @@ function renderItems(resetScroll = false) {
   }
   list.scrollTop = savedScroll;
   update();
+  if (focusKey) {
+    const same = list.querySelector<HTMLButtonElement>(
+      `[data-${focusKey}="${focusValue}"]`,
+    );
+    (same && !same.disabled
+      ? same
+      : list.querySelector<HTMLButtonElement>("button:not(:disabled)")
+    )?.focus({ preventScroll: true });
+  }
 }
 function updateBulkHint() {
   setText(
@@ -631,7 +670,7 @@ function update() {
           ? "TRIAL LOCKED"
           : affordable
             ? `BUILD ${qty > 1 ? "×" + qty : "+"}`
-            : eta(cost, rate),
+            : eta(cost, baseRate),
       );
       setText(rows.owned[i], String(state.counts[i]));
       setText(
@@ -662,7 +701,7 @@ function update() {
             ? "TRIAL LOCKED"
             : state.energy >= r.cost
               ? "LEARN"
-              : eta(r.cost, rate),
+              : eta(r.cost, baseRate),
       );
     });
   if (tab === "worlds") {
@@ -682,7 +721,7 @@ function update() {
         i === state.world + 1
           ? state.energy >= cost
             ? "TRAVEL"
-            : eta(cost, rate)
+            : eta(cost, baseRate)
           : i > state.world + 1
             ? "UNCHARTED"
             : "",
@@ -768,7 +807,7 @@ function update() {
   setText(ui.legacyReady, ready ? `${ready} ready` : "∞");
   setText(
     ui.legacyPower,
-    `${format(state.shards)} stardust (+${pct(state.shards)}) · ${state.relics.reduce((a, b) => a + b, 0)} relic ranks`,
+    `${format(state.shards)} stardust (${state.trial >= 0 ? "suspended in trial" : "+" + pct(state.shards)}) · ${state.relics.reduce((a, b) => a + b, 0)} relic ranks`,
   );
   // Tab dots point at something worth doing on another tab.
   const news: Record<string, boolean> = {
@@ -886,14 +925,31 @@ function update() {
 
 /* ---------- Persistence, dialogs, abilities ---------- */
 
+let savingPaused = !!loaded.unreadable && !loaded.backupKey;
 function persist() {
+  if (savingPaused) {
+    setText($("#save-status"), "⚠ Autosave paused");
+    return;
+  }
   const ok = save(state);
   setText($("#save-status"), ok ? "✓ Progress saved" : "⚠ Save unavailable");
 }
 const dialog = $<HTMLDialogElement>("#dialog");
+/** Fill and show the shared dialog, starting focus on × so a stray Space never confirms. */
+function openDialog(html: string) {
+  $("#dialog-content").innerHTML = html;
+  if (!dialog.open) dialog.showModal();
+  $("#close-dialog").focus();
+}
 $("#close-dialog").addEventListener("click", () => dialog.close());
 dialog.addEventListener("click", (e) => {
   if (e.target === dialog) dialog.close();
+});
+// Focus left inside a closed dialog would swallow Space; hand it back to the page.
+// (A keyboard user's opener regains focus and is left alone.)
+dialog.addEventListener("close", () => {
+  if (dialog.contains(document.activeElement))
+    (document.activeElement as HTMLElement).blur();
 });
 ui.sound.addEventListener("click", () => {
   state.sound = !state.sound;
@@ -903,9 +959,9 @@ ui.sound.addEventListener("click", () => {
 });
 ui.ascend.addEventListener("click", () => {
   const reward = ascensionReward(state);
-  $("#dialog-content").innerHTML =
-    `<span class="modal-symbol">✺</span><h2>A new beginning</h2><p>Let your constellation become stardust. Reset your aether, structures, research, and worlds in exchange for a permanent bonus to every future expedition.</p><div class="modal-stat">${format(reward)} <small>stardust · +${pct(reward)} power</small></div><div class="echo-reward">◈ +${echoReward(state)} Echoes</div><p>Each stardust adds ${Math.round(balance.stardustBonus * 100)}% to production and harvests, forever. Pushing further in a run earns more: the next stardust arrives at ${format(nextStardustAt(state))} earned. Echoes need at least 1M aether in a run.</p><p>You keep all relics, Echoes, challenge claims, and lifetime records. Starter relics apply to the new run.</p><button id="confirm-ascend" class="primary" ${reward === 0 ? "disabled" : ""}>${reward === 0 ? `Earn ${format(balance.stardustBase)} aether to ascend` : "Begin again ✧"}</button>`;
-  dialog.showModal();
+  openDialog(
+    `<span class="modal-symbol">✺</span><h2>A new beginning</h2><p>Let your constellation become stardust. Reset your aether, structures, research, and worlds in exchange for a permanent bonus to every future expedition.</p><div class="modal-stat">${format(reward)} <small>stardust · +${pct(reward)} power</small></div><div class="echo-reward">◈ +${echoReward(state)} Echoes</div><p>Each stardust adds ${Math.round(balance.stardustBonus * 100)}% to production and harvests, forever. Pushing further in a run earns more: the next stardust arrives at ${format(nextStardustAt(state))} earned. Echoes need at least 1M aether in a run.</p><p>You keep all relics, Echoes, challenge claims, and lifetime records. Starter relics apply to the new run.</p><button id="confirm-ascend" class="primary" ${reward === 0 ? "disabled" : ""}>${reward === 0 ? `Earn ${format(balance.stardustBase)} aether to ascend` : "Begin again ✧"}</button>`,
+  );
   $("#confirm-ascend").addEventListener("click", () => {
     if (ascensionReward(state) < 1) return;
     state = ascend(state);
@@ -923,9 +979,9 @@ ui.ascend.addEventListener("click", () => {
 $("#settings").addEventListener("click", () => {
   const stat = (label: string, value: string) =>
     `<div class="settings-stat"><span>${label}</span><strong>${value}</strong></div>`;
-  $("#dialog-content").innerHTML =
-    `<span class="eyebrow">EXPEDITION SETTINGS</span><h2>Make yourself at home.</h2><p>Your progress saves automatically on this device. Your structures keep producing for up to 8 hours while you’re away.</p><div class="settings-grid">${stat("Lifetime aether", format(state.lifetime))}${stat("Manual harvests", format(state.totalClicks))}${stat("Comets caught", format(state.comets))}${stat("Furthest world", worlds[state.bestWorld].name)}${stat("Ascensions", format(state.ascensions))}${stat("Stardust", `${format(state.shards)} (+${pct(state.shards)})`)}${stat("Trials completed", `${state.completedTrials.length} / ${trials.length}`)}${stat("Relic ranks", String(state.relics.reduce((a, b) => a + b, 0)))}</div><label class="theme-label">Visual theme<select id="theme">${themes.map((t) => `<option value="${t.id}" ${state.theme === t.id ? "selected" : ""}>${t.name}</option>`).join("")}</select></label><button id="export" class="primary">Export save backup ↓</button><label class="import-label">Import save backup ↑<input id="import" type="file" accept="application/json,.json"/></label><details class="danger-zone"><summary>Danger zone</summary><p>Erase every expedition, relic, and record on this device. Export a backup first if you might want it back.</p><button id="reset-all" class="danger">Erase all progress…</button></details><p class="small-print">Single player. No accounts, ads, or purchases. Just you and a universe of possibility.</p>`;
-  dialog.showModal();
+  openDialog(
+    `<span class="eyebrow">EXPEDITION SETTINGS</span><h2>Make yourself at home.</h2><p>Your progress saves automatically on this device. Your structures keep producing for up to 8 hours while you’re away.</p><div class="settings-grid">${stat("Lifetime aether", format(state.lifetime))}${stat("Manual harvests", format(state.totalClicks))}${stat("Comets caught", format(state.comets))}${stat("Furthest world", worlds[state.bestWorld].name)}${stat("Ascensions", format(state.ascensions))}${stat("Stardust", `${format(state.shards)} (+${pct(state.shards)})`)}${stat("Trials completed", `${state.completedTrials.length} / ${trials.length}`)}${stat("Relic ranks", String(state.relics.reduce((a, b) => a + b, 0)))}</div><label class="theme-label">Visual theme<select id="theme">${themes.map((t) => `<option value="${t.id}" ${state.theme === t.id ? "selected" : ""}>${t.name}</option>`).join("")}</select></label><button id="export" class="primary">Export save backup ↓</button><label class="import-label">Import save backup ↑<input id="import" type="file" accept="application/json,.json"/></label><details class="danger-zone"><summary>Danger zone</summary><p>Erase every expedition, relic, and record on this device. Export a backup first if you might want it back.</p><button id="reset-all" class="danger">Erase all progress…</button></details><p class="small-print">Single player. No accounts, ads, or purchases. Just you and a universe of possibility.</p>`,
+  );
   $("#theme").addEventListener("change", (e) => {
     state.theme = (e.target as HTMLSelectElement).value;
     applyTheme();
@@ -1025,6 +1081,7 @@ ui.items.addEventListener("change", (e) => {
 });
 function replaceRun(next: State) {
   state = next;
+  savingPaused = false;
   previous = Date.now();
   announcedComet = state.nextComet;
   scene?.setWorld(worlds[state.world].color, state.world);
@@ -1038,9 +1095,9 @@ function confirmRunReset(
   confirmLabel = "Confirm and begin",
   destructive = false,
 ) {
-  $("#dialog-content").innerHTML =
-    `<h2>${title}</h2><p>${description}</p><button class="${destructive ? "danger" : "primary"}" id="confirm-run">${confirmLabel}</button><button class="secondary" id="cancel-run">Cancel</button>`;
-  if (!dialog.open) dialog.showModal();
+  openDialog(
+    `<h2>${title}</h2><p>${description}</p><button class="${destructive ? "danger" : "primary"}" id="confirm-run">${confirmLabel}</button><button class="secondary" id="cancel-run">Cancel</button>`,
+  );
   $("#cancel-run").addEventListener("click", () => dialog.close());
   $("#confirm-run").addEventListener("click", () => {
     const next = action();
@@ -1093,6 +1150,12 @@ window.addEventListener("pagehide", persist);
 if (loaded.backupKey)
   toast(
     "Your previous save could not be read, so a fresh expedition began. The old data was kept in browser storage as a backup.",
+    12000,
+  );
+else if (savingPaused)
+  toast(
+    "Your save could not be read or backed up, so autosave is paused to protect it. Import a backup or erase progress in Settings to continue saving.",
+    15000,
   );
 else if (offline > 1)
   toast(

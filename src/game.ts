@@ -1481,7 +1481,11 @@ export const SAVE_KEY = "aether-forge-v1";
  * Load the local save. An unreadable save is copied to a timestamped backup key
  * before a fresh game starts, so autosave can never overwrite the only copy.
  */
-export function load(): { state: State; backupKey?: string } {
+export function load(): {
+  state: State;
+  backupKey?: string;
+  unreadable?: boolean;
+} {
   let raw: string | null = null;
   try {
     raw = localStorage.getItem(SAVE_KEY);
@@ -1499,9 +1503,10 @@ export function load(): { state: State; backupKey?: string } {
   try {
     localStorage.setItem(backupKey, raw);
   } catch {
-    return { state: fresh() };
+    // No backup was possible; the caller must not autosave over the original.
+    return { state: fresh(), unreadable: true };
   }
-  return { state: fresh(), backupKey };
+  return { state: fresh(), backupKey, unreadable: true };
 }
 export function save(s: State) {
   s.savedAt = Date.now();
