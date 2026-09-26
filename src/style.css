@@ -1,5 +1,5 @@
 :root {
-  font-family: "DM Sans", sans-serif;
+  font-family: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
   color: #e5ebe9;
   background: #080c12;
   font-synthesis: none;
@@ -74,13 +74,13 @@ button:not(:disabled):active {
 }
 .brand small {
   display: block;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 3.5px;
   color: #6f807f;
   margin-top: 7px;
 }
 .sector {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1.6px;
   color: #83918f;
   display: flex;
@@ -105,7 +105,7 @@ button:not(:disabled):active {
   gap: 15px;
 }
 #save-status {
-  font-size: 10px;
+  font-size: 11px;
   color: #72857c;
   margin-right: 8px;
 }
@@ -145,13 +145,13 @@ main {
   align-items: center;
 }
 .eyebrow {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.8px;
   font-weight: 600;
   color: #75847e;
 }
 .world-badge {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.3px;
   color: #a4b3aa;
   background: #ffffff04;
@@ -168,14 +168,14 @@ main {
   margin-top: 36px;
 }
 .world-heading h1 {
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
   font-size: 38px;
   letter-spacing: -1.5px;
   font-weight: 500;
   margin: 0 0 12px;
 }
 .world-heading p {
-  font-size: 11px;
+  font-size: 13px;
   color: #788780;
   margin: 0;
   line-height: 1.8;
@@ -208,14 +208,14 @@ canvas {
   align-items: center;
   gap: 7px;
   color: #769589;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1.4px;
   pointer-events: none;
 }
 .coordinates {
   margin-left: auto;
   color: #4c6264;
-  font-size: 7px;
+  font-size: 9px;
 }
 .floating-label {
   position: absolute;
@@ -226,7 +226,7 @@ canvas {
   align-items: center;
   pointer-events: none;
   color: #668f83;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1.2px;
 }
 .floating-label > span:first-child {
@@ -235,7 +235,7 @@ canvas {
 }
 .floating-label small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0;
   color: #aec2b6;
   margin-top: 5px;
@@ -245,7 +245,7 @@ canvas {
   padding: 10px 0 28px;
 }
 .harvest-area > .eyebrow {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1.9px;
 }
 #harvest {
@@ -260,7 +260,7 @@ canvas {
   height: 52px;
   width: 280px;
   margin: 15px auto 13px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   box-shadow: 0 4px 32px #b8efcc0e;
 }
@@ -273,18 +273,18 @@ canvas {
   font-weight: 400;
 }
 #click-value {
-  font-size: 10px;
+  font-size: 12px;
   border-left: 1px solid #537e6533;
   padding-left: 15px;
   margin-left: 8px;
 }
 .harvest-hint {
-  font-size: 9px;
+  font-size: 11px;
   color: #64736d;
 }
 kbd {
   font:
-    8px "DM Sans",
+    10px "DM Sans Variable",
     sans-serif;
   border: 1px solid #ffffff14;
   border-radius: 3px;
@@ -320,11 +320,11 @@ kbd {
 .journey-title {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 .journey-title > span:last-child {
-  font-size: 8px;
+  font-size: 11px;
   color: #94a88f;
 }
 .progress-track {
@@ -340,7 +340,7 @@ kbd {
   border-radius: 4px;
 }
 .journey-content p {
-  font-size: 8px;
+  font-size: 11px;
   color: #68796c;
   margin: 0;
   line-height: 1.6;
@@ -353,7 +353,7 @@ kbd {
   display: flex;
   justify-content: space-between;
   padding: 24px 0;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1.6px;
   color: #4a6056;
 }
@@ -380,12 +380,12 @@ kbd {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.8px;
   color: #a3b9ab;
 }
 .pill {
-  font-size: 6px;
+  font-size: 9px;
   border: 1px solid #a9d8b31a;
   background: #99d3af0b;
   padding: 4px 6px;
@@ -394,7 +394,7 @@ kbd {
   letter-spacing: 1.2px;
 }
 .energy-number {
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
   font-size: 46px;
   letter-spacing: -2px;
   line-height: 1.45;
@@ -406,7 +406,7 @@ kbd {
   display: flex;
   justify-content: space-between;
   color: #6f887b;
-  font-size: 9px;
+  font-size: 12px;
   position: relative;
   z-index: 1;
 }
@@ -417,7 +417,7 @@ kbd {
 }
 .resource-bottom > span:last-child {
   color: #657c70;
-  font-size: 8px;
+  font-size: 11px;
 }
 .sparkline {
   position: absolute;
@@ -439,7 +439,7 @@ kbd {
   background: transparent;
   padding: 0 0 15px;
   color: #71817c;
-  font-size: 11px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .tabs button.active {
@@ -447,7 +447,7 @@ kbd {
   border-bottom-color: #b7dfbd;
 }
 .tabs button span {
-  font-size: 7px;
+  font-size: 10px;
   background: #ffffff06;
   color: #738e7c;
   border-radius: 4px;
@@ -461,14 +461,14 @@ kbd {
   margin-bottom: 17px;
 }
 .section-heading h2 {
-  font-family: "Manrope", sans-serif;
-  font-size: 13px;
+  font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.2px;
   margin: 0 0 7px;
 }
 .section-heading p {
-  font-size: 9px;
+  font-size: 12px;
   color: #687a71;
   margin: 0;
 }
@@ -481,7 +481,7 @@ kbd {
   margin-left: 10px;
 }
 .quantity button {
-  font-size: 9px;
+  font-size: 11px;
   color: #64786a;
   background: none;
   border: 0;
@@ -516,9 +516,6 @@ kbd {
 }
 .item:disabled {
   opacity: 0.58;
-}
-.item:first-child {
-  opacity: 1;
 }
 .item-icon {
   display: grid;
@@ -566,12 +563,12 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 550;
   color: #dce8df;
 }
 .owned {
-  font-size: 8px;
+  font-size: 10px;
   padding: 2px 5px;
   border-radius: 3px;
   background: #ffffff06;
@@ -579,20 +576,20 @@ kbd {
 }
 .item-description {
   display: block;
-  font-size: 8px;
+  font-size: 12px;
   color: #7a8c81;
   margin-top: 5px;
   line-height: 1.4;
 }
 .item-rate {
   display: block;
-  font-size: 7px;
+  font-size: 10.5px;
   color: #8eae98;
   margin-top: 7px;
   letter-spacing: 0.1px;
 }
 .item-price {
-  font-size: 10px;
+  font-size: 13px;
   color: #beddbd;
   white-space: nowrap;
   text-align: right;
@@ -600,7 +597,7 @@ kbd {
 }
 .item-price small {
   display: block;
-  font-size: 6px;
+  font-size: 9px;
   letter-spacing: 1.4px;
   color: #73917b;
   margin-top: 9px;
@@ -620,13 +617,13 @@ kbd {
   color: #b3a4cc;
 }
 .ascend-card h3 {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 500;
   color: #c1b6d5;
   margin: 0 0 6px;
 }
 .ascend-card p {
-  font-size: 8px;
+  font-size: 11px;
   color: #787088;
   margin: 0;
   line-height: 1.6;
@@ -644,7 +641,7 @@ kbd {
   display: flex;
   justify-content: center;
   gap: 25px;
-  font-size: 7px;
+  font-size: 11px;
   color: #5f7068;
   margin-top: 17px;
 }
@@ -719,7 +716,7 @@ dialog::backdrop {
   backdrop-filter: blur(8px);
 }
 dialog h2 {
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
   font-size: 25px;
   letter-spacing: -0.8px;
 }
@@ -811,10 +808,10 @@ dialog p {
     min-height: 82px;
   }
   .item-description {
-    font-size: 10px;
+    font-size: 12.5px;
   }
   .item-title {
-    font-size: 12px;
+    font-size: 14.5px;
   }
 }
 @media (max-width: 1100px) {
@@ -840,7 +837,7 @@ dialog p {
     display: none;
   }
   .world-top > .eyebrow {
-    font-size: 7px;
+    font-size: 9px;
     letter-spacing: 1px;
   }
   .world-heading h1 {
@@ -848,9 +845,6 @@ dialog p {
   }
   .floating-label {
     right: 5%;
-  }
-  .item-description {
-    max-width: 220px;
   }
   .tabs {
     gap: 20px;
@@ -868,7 +862,7 @@ dialog p {
     font-size: 35px;
   }
   .brand small {
-    font-size: 6px;
+    font-size: 8px;
   }
   #save-status {
     display: none;
@@ -906,20 +900,19 @@ dialog p {
     min-height: 83px;
   }
   .item-description {
-    max-width: none;
-    font-size: 9px;
+    font-size: 12px;
   }
   .item-title {
-    font-size: 12px;
+    font-size: 14px;
   }
   .tabs {
     gap: 28px;
   }
   .section-heading p {
-    font-size: 9px;
+    font-size: 12px;
   }
   .world-heading p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .floating-label {
     right: 12%;
@@ -928,10 +921,10 @@ dialog p {
     padding-bottom: 10px;
   }
   .world-top > .eyebrow {
-    font-size: 7px;
+    font-size: 9px;
   }
   .world-badge {
-    font-size: 7px;
+    font-size: 9px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -970,12 +963,12 @@ dialog p {
 }
 .ability-button span {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   color: #c0dfcd;
 }
 .ability-button small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #92a69a;
   margin-top: 8px;
   line-height: 1.5;
@@ -1007,15 +1000,15 @@ dialog p {
   margin: -12px 0 15px;
   border-bottom: 1px solid #ffffff0b;
   color: #cbb7e8;
-  font-size: 12px;
+  font-size: 13px;
 }
 .legacy-wallet small {
   color: #897a9d;
-  font-size: 9px;
+  font-size: 11px;
   margin-left: 6px;
 }
 #legacy-power {
-  font-size: 9px;
+  font-size: 11px;
   color: #9c91ad;
   text-align: right;
 }
@@ -1030,13 +1023,13 @@ dialog p {
   color: #d5c1ef;
 }
 .legacy-explainer p {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: #a297b2;
   margin: 10px 0 0;
 }
 .list-heading {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 2px;
   color: #a398b1;
   margin: 18px 0 8px;
@@ -1071,7 +1064,7 @@ dialog p {
     gap: 15px;
   }
   .tabs button {
-    font-size: 10px;
+    font-size: 12px;
   }
   .tabs button span {
     margin-left: 2px;
@@ -1088,13 +1081,13 @@ dialog p {
     padding: 11px;
   }
   .ability-button span {
-    font-size: 11px;
+    font-size: 12px;
   }
   .tabs {
     gap: 14px;
   }
   .tabs button {
-    font-size: 10px;
+    font-size: 12px;
   }
   .legacy-wallet {
     font-size: 11px;
@@ -1104,7 +1097,7 @@ dialog p {
     gap: 9px;
   }
   .item-description {
-    font-size: 9px;
+    font-size: 11.5px;
   }
 }
 /* Expedition command deck */
@@ -1123,7 +1116,7 @@ dialog p {
   gap: 10px;
   margin-top: 15px;
   color: #bad0c4;
-  font-size: 11px;
+  font-size: 12px;
 }
 .setting-row select {
   color: #d1e8d9;
@@ -1150,7 +1143,7 @@ dialog p {
   color: #d9c7f1;
 }
 .trial-card p {
-  font-size: 11px;
+  font-size: 12px;
   color: #a39caf;
   line-height: 1.65;
 }
@@ -1170,7 +1163,7 @@ dialog p {
   background: linear-gradient(110deg, #20403380, #1b2334);
 }
 .run-banner {
-  font-size: 10px;
+  font-size: 12px;
   color: #acb9ae;
   text-align: center;
   padding: 4px 0 12px;
@@ -1257,7 +1250,7 @@ body {
 }
 .base-status {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   padding: 12px;
 }
@@ -1265,7 +1258,7 @@ body {
   margin-top: 8px;
   padding: 12px 16px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 .mechanic-panel p {
@@ -1287,7 +1280,7 @@ body {
   color: var(--theme-accent);
 }
 #bulk-hint {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
   color: #a0abba;
 }
@@ -1321,4 +1314,223 @@ body {
   padding: 10px;
   border: 1px solid #ffffff30;
   border-radius: 8px;
+}
+
+/* v5: readability, mobile HUD, discovery, and settings. */
+main,
+.topbar,
+.mobile-hud {
+  -webkit-user-select: none;
+  user-select: none;
+}
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 3px;
+}
+.mobile-hud {
+  display: none;
+}
+.bulk-button {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid #ffffff1c;
+  border-radius: 8px;
+  background: var(--theme-wash);
+  color: var(--theme-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.bulk-button:not(:disabled):hover {
+  border-color: var(--theme-accent);
+}
+.quantity button {
+  min-width: 34px;
+}
+.tabs button {
+  position: relative;
+}
+.tabs button.has-news::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: -8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--theme-accent);
+  box-shadow: 0 0 8px var(--theme-accent);
+}
+.price-value {
+  display: block;
+}
+.item-price small {
+  text-transform: uppercase;
+}
+.item.learned {
+  min-height: 0;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  opacity: 0.45;
+}
+.item.learned .item-icon {
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+}
+.item.learned .item-description,
+.item.learned .item-rate {
+  display: none;
+}
+.locked-item,
+.item.locked-item:hover {
+  border-style: dashed;
+  border-color: #ffffff14;
+  background: transparent;
+  opacity: 0.6;
+  cursor: default;
+}
+.ascend-card button.ready {
+  color: #1c1630;
+  background: #cdb8f2;
+  border-color: #cdb8f2;
+  box-shadow: 0 0 18px #cdb8f255;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+}
+.settings-grid .settings-stat {
+  font-size: 12px;
+}
+.settings-grid strong {
+  color: #dce9e1;
+  font-weight: 600;
+  text-align: right;
+}
+.danger-zone {
+  margin-top: 22px;
+  border: 1px solid #ff8a8a2b;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.danger-zone summary {
+  cursor: pointer;
+  color: #f0a3a3;
+  font-size: 12px;
+  font-weight: 600;
+}
+.danger-zone p {
+  margin: 10px 0 0;
+}
+.danger {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-top: 16px;
+  border: 1px solid #ff8f8f55;
+  border-radius: 6px;
+  background: #3a1d22;
+  color: #ffc4c4;
+  font-size: 12px;
+  font-weight: 600;
+}
+.danger:hover {
+  background: #4a2129;
+}
+dialog .secondary {
+  font-size: 12px;
+}
+@media (max-width: 800px) {
+  .mobile-hud {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    background: var(--theme-bg);
+    background: color-mix(in srgb, var(--theme-bg) 88%, transparent);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-size: 12px;
+    color: #9fb0a8;
+  }
+  .hud-energy strong {
+    font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--theme-accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-rate strong {
+    color: #d4e4da;
+    font-weight: 500;
+  }
+  #hud-harvest {
+    margin-left: auto;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--theme-accent);
+    color: #1d3326;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  #hud-harvest:disabled {
+    opacity: 0.4;
+  }
+  .scene-container {
+    height: 300px;
+  }
+  .world-heading {
+    margin-top: 16px;
+  }
+  .world-heading h1 {
+    font-size: 30px;
+  }
+  /* The page already scrolls on phones; avoid a second scroll area inside it. */
+  #items {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  dialog {
+    padding: 28px 22px;
+  }
+}
+.hint-touch {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .hint-keys {
+    display: none;
+  }
+  .hint-touch {
+    display: inline;
+  }
+}
+/* Tabs scroll sideways when they don't fit; hide the bar and fade the edge instead. */
+.tabs {
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .tabs {
+    padding-right: 28px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 36px),
+      transparent
+    );
+  }
 }
